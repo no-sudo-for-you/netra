@@ -1,4 +1,4 @@
-# Network Assessment Reporting Tool (NART)
+# Network Risk Assessment (NETRA)
 
 A comprehensive tool for automating the analysis and reporting of network security assessments.
 
