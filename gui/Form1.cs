@@ -402,5 +402,173 @@ namespace Netra
                 e.Effect = DragDropEffects.None; // Not files, don't allow
             }
         }
+
+        private void label4_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void textBox3_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBox4_Enter(object sender, EventArgs e)
+        {
+            if (textBox4.ForeColor == Color.DarkGray) // If it's still placeholder color
+            {
+                textBox4.Text = "";
+                textBox4.ForeColor = Color.Black;
+            }
+        }
+
+        private void textBox4_Leave(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(textBox4.Text))
+            {
+                textBox4.Text = "Enter scan types, notes, etc...";
+                textBox4.ForeColor = Color.DarkGray;
+            }
+        }
+
+        private void groupBox1_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBox4_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBox5_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBox6_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBox7_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label7_Enter(object sender, EventArgs e)
+        {
+
+        }
+        private void textBox5_Enter(object sender, EventArgs e)
+        {
+            TextBox tb = sender as TextBox;
+            if (tb.ForeColor == Color.DimGray) // If it's still placeholder color
+            {
+                tb.Text = "";
+                tb.ForeColor = Color.Black;
+            }
+        }
+        private void textBox5_Leave(object sender, EventArgs e)
+        {
+            TextBox tb = sender as TextBox;
+            if (string.IsNullOrWhiteSpace(tb.Text))
+            {
+                tb.Text = "Enter company name, phone numbers, etc...";
+                tb.ForeColor = Color.DimGray;
+            }
+        }
+
+        private void textBox5_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBox4_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void radioButton3_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label8_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void groupBox3_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label8_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void radioFileSource_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioFileSource.Checked)
+            {
+                btnSelectSource2.Text = "Browse Files...";
+                // Reset selection status
+                label9.Text = "No Source Selected";
+                label9.ForeColor = Color.Red;
+            }
+        }
+
+        private void radioLibrarySource_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioLibrarySource.Checked)
+            {
+                btnSelectSource2.Text = "Select from Library";
+                // Reset selection status
+                label9.Text = "No Source Selected";
+                label9.ForeColor = Color.Red;
+            }
+        }
+
+        private void btnSelectSource2_Click(object sender, EventArgs e)
+        {
+            if (radioFileSource.Checked)
+            {
+                // File selection logic
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+                openFileDialog.Filter = "Scan Files|*.zip;*.txt;*.nmap|All Files|*.*";
+                openFileDialog.Title = "Select Scan File to Scrub";
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    // File selected successfully
+                    string fileName = Path.GetFileName(openFileDialog.FileName);
+                    label9.Text = $"Selected: {fileName}";
+                    label9.ForeColor = Color.Green;
+                }
+            }
+            else if (radioLibrarySource.Checked)
+            {
+                // Library selection logic (placeholder for now)
+                MessageBox.Show("Library selection coming soon!", "Info");
+                // Later: Open dataset library selection dialog
+            }
+        }
     }
 }

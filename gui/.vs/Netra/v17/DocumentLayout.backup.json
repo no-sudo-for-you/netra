@@ -9,10 +9,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{0D2EB0B1-9B7F-48FB-AE9A-4A7B5C38982A}|Netra.csproj|C:\\Users\\briis\\Desktop\\Semester 4\\Capstone\\Github\\netra\\gui\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0D2EB0B1-9B7F-48FB-AE9A-4A7B5C38982A}|Netra.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{0D2EB0B1-9B7F-48FB-AE9A-4A7B5C38982A}|Netra.csproj|C:\\Users\\briis\\Desktop\\Semester 4\\Capstone\\Github\\netra\\gui\\properties\\resources.resx||{81828910-B8B3-4D2B-99A3-067027C180C1}",
-      "RelativeMoniker": "D:0:0:{0D2EB0B1-9B7F-48FB-AE9A-4A7B5C38982A}|Netra.csproj|solutionrelative:properties\\resources.resx||{81828910-B8B3-4D2B-99A3-067027C180C1}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,33 +18,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 0,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Resources.resx",
-              "DocumentMoniker": "C:\\Users\\briis\\Desktop\\Semester 4\\Capstone\\Github\\netra\\gui\\Properties\\Resources.resx",
-              "RelativeDocumentMoniker": "Properties\\Resources.resx",
-              "ToolTip": "C:\\Users\\briis\\Desktop\\Semester 4\\Capstone\\Github\\netra\\gui\\Properties\\Resources.resx",
-              "RelativeToolTip": "Properties\\Resources.resx",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
-              "WhenOpened": "2025-06-05T22:52:25.234Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Form1.cs",
-              "DocumentMoniker": "C:\\Users\\briis\\Desktop\\Semester 4\\Capstone\\Github\\netra\\gui\\Form1.cs",
-              "RelativeDocumentMoniker": "Form1.cs",
-              "ToolTip": "C:\\Users\\briis\\Desktop\\Semester 4\\Capstone\\Github\\netra\\gui\\Form1.cs",
-              "RelativeToolTip": "Form1.cs",
-              "ViewState": "AgIAAHEBAAAAAAAAAAA6wJMBAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-05T20:41:01.33Z",
-              "EditorCaption": ""
-            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
@@ -59,7 +30,22 @@
               "RelativeToolTip": "Form1.cs [Design]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-05T17:49:01.763Z",
+              "IsPinned": true,
               "EditorCaption": " [Design]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Form1.cs",
+              "DocumentMoniker": "C:\\Users\\briis\\Desktop\\Semester 4\\Capstone\\Github\\netra\\gui\\Form1.cs",
+              "RelativeDocumentMoniker": "Form1.cs",
+              "ToolTip": "C:\\Users\\briis\\Desktop\\Semester 4\\Capstone\\Github\\netra\\gui\\Form1.cs",
+              "RelativeToolTip": "Form1.cs",
+              "ViewState": "AgIAAB0CAAAAAAAAAAAiwDICAAAaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-05T20:41:01.33Z",
+              "IsPinned": true,
+              "EditorCaption": ""
             }
           ]
         }
