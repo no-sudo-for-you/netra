@@ -9,6 +9,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{0D2EB0B1-9B7F-48FB-AE9A-4A7B5C38982A}|Netra.csproj|C:\\Users\\briis\\Desktop\\Semester 4\\Capstone\\Github\\netra\\gui\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0D2EB0B1-9B7F-48FB-AE9A-4A7B5C38982A}|Netra.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0D2EB0B1-9B7F-48FB-AE9A-4A7B5C38982A}|Netra.csproj|c:\\users\\briis\\desktop\\semester 4\\capstone\\github\\netra\\gui\\form1.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0D2EB0B1-9B7F-48FB-AE9A-4A7B5C38982A}|Netra.csproj|solutionrelative:form1.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -41,10 +45,23 @@
               "RelativeDocumentMoniker": "Form1.cs",
               "ToolTip": "C:\\Users\\briis\\Desktop\\Semester 4\\Capstone\\Github\\netra\\gui\\Form1.cs",
               "RelativeToolTip": "Form1.cs",
-              "ViewState": "AgIAAB0CAAAAAAAAAAAiwDICAAAaAAAAAAAAAA==",
+              "ViewState": "AgIAAAUDAAAAAAAAAAA7wDoDAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-05T20:41:01.33Z",
               "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Form1.Designer.cs",
+              "DocumentMoniker": "C:\\Users\\briis\\Desktop\\Semester 4\\Capstone\\Github\\netra\\gui\\Form1.Designer.cs",
+              "RelativeDocumentMoniker": "Form1.Designer.cs",
+              "ToolTip": "C:\\Users\\briis\\Desktop\\Semester 4\\Capstone\\Github\\netra\\gui\\Form1.Designer.cs",
+              "RelativeToolTip": "Form1.Designer.cs",
+              "ViewState": "AgIAAF4BAAAAAAAAAAAtwIEBAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-13T17:57:55.111Z",
               "EditorCaption": ""
             }
           ]

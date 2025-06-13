@@ -17,6 +17,56 @@ namespace Netra
         public Form1()
         {
             InitializeComponent();
+            SetupDatasetLibrary();
+
+        }
+
+        private void SetupDatasetLibrary()
+        {
+            // Clear any existing columns
+            dataGridView1.Columns.Clear();
+
+            // Add columns
+            dataGridView1.Columns.Add("CompanyName", "Company Name");
+            dataGridView1.Columns.Add("ScanDate", "Scan Date");
+            dataGridView1.Columns.Add("TotalAssets", "Total Assets");
+            dataGridView1.Columns.Add("ActiveAssets", "Active Assets");
+            dataGridView1.Columns.Add("TopServices", "Top Services");
+            dataGridView1.Columns.Add("ScansProcessed", "Scans Processed");
+            dataGridView1.Columns.Add("RiskLevel", "Risk Level");
+            dataGridView1.Columns.Add("LastModified", "Last Modified");
+            dataGridView1.Columns.Add("Actions", "Actions");
+
+            // Set column widths
+            dataGridView1.Columns["CompanyName"].Width = 120;
+            dataGridView1.Columns["ScanDate"].Width = 100;
+            dataGridView1.Columns["TotalAssets"].Width = 80;
+            dataGridView1.Columns["ActiveAssets"].Width = 80;
+            dataGridView1.Columns["TopServices"].Width = 150;
+            dataGridView1.Columns["ScansProcessed"].Width = 90;
+            dataGridView1.Columns["RiskLevel"].Width = 80;
+            dataGridView1.Columns["LastModified"].Width = 120;
+            dataGridView1.Columns["Actions"].Width = 100;
+
+            // Set grid properties
+            dataGridView1.AllowUserToAddRows = false;
+            dataGridView1.AllowUserToDeleteRows = false;
+            dataGridView1.ReadOnly = true;
+            dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dataGridView1.MultiSelect = false;
+
+            // Add sample data that matches your parser output
+            AddSampleData();
+        }
+
+        private void AddSampleData()
+        {
+            // Sample data based on your nmap parser output format
+            dataGridView1.Rows.Add("CLIENT-A", "2025-06-13", "10", "10", "http, ssh, ssl/https", "4", "", "2025-06-13 14:30", "View | Delete");
+            dataGridView1.Rows.Add("CLIENT-B", "2025-06-12", "15", "12", "ssh, http, ftp", "3", "Medium", "2025-06-12 16:45", "View | Delete");
+            dataGridView1.Rows.Add("CLIENT-C", "2025-06-10", "8", "8", "https, ssh, telnet", "2", "High", "2025-06-10 09:15", "View | Delete");
+            dataGridView1.Rows.Add("ACME-CORP", "2025-06-08", "25", "23", "http, ssh, mysql", "6", "", "2025-06-08 11:20", "View | Delete");
+            dataGridView1.Rows.Add("TECH-START", "2025-06-05", "6", "5", "ssh, http, wap-wsp", "2", "Low", "2025-06-05 13:10", "View | Delete");
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -529,8 +579,9 @@ namespace Netra
             if (radioFileSource.Checked)
             {
                 btnSelectSource2.Text = "Browse Files...";
-                // Reset selection status
-                label9.Text = "No Source Selected";
+                btnSelectSource2.Visible = true; // Show browse button
+                                                 // Reset selection status
+                label9.Text = "No Source Selected.";
                 label9.ForeColor = Color.Red;
             }
         }
@@ -540,8 +591,9 @@ namespace Netra
             if (radioLibrarySource.Checked)
             {
                 btnSelectSource2.Text = "Select from Library";
-                // Reset selection status
-                label9.Text = "No Source Selected";
+                btnSelectSource2.Visible = true; // Show browse button
+                                                 // Reset selection status
+                label9.Text = "No Source Selected.";
                 label9.ForeColor = Color.Red;
             }
         }
@@ -566,8 +618,211 @@ namespace Netra
             else if (radioLibrarySource.Checked)
             {
                 // Library selection logic (placeholder for now)
-                MessageBox.Show("Library selection coming soon!", "Info");
-                // Later: Open dataset library selection dialog
+                MessageBox.Show("Dataset library selection will be implemented when the Dataset Library tab is complete!", "Coming Soon");
+
+                // For demo purposes, simulate selecting from library
+                label9.Text = "Selected: CLIENT-A Scan (June 5, 2025)";
+                label9.ForeColor = Color.Green;
+            }
+            else
+            {
+                MessageBox.Show("Please select a data source type first!", "No Source Type Selected");
+            }
+        }
+
+        private void SaveToLocal_CheckedChanged(object sender, EventArgs e)
+        {
+            // Show/hide the browse button based on checkbox state
+            buttonSaveLocal.Visible = SaveToLocal.Checked;
+        }
+
+        private void checkBox10_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBox11_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label11_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label12_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ScrubbingBtn_Click(object sender, EventArgs e)
+        {
+            // Check if user has selected a source
+            if (label9.Text == "No Source Selected.")
+            {
+                MessageBox.Show("Please select a data source first!", "No Source Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Check if at least one output destination is selected
+            bool hasOutput = checkBoxSaveToLibrary.Checked || SaveToLocal.Checked || checkBoxSendToReport.Checked;
+            if (!hasOutput)
+            {
+                MessageBox.Show("Please select at least one output destination!", "No Output Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Show progress elements
+            progressBarScrubbing.Visible = true;
+            labelProcessing.Visible = true;
+
+            // Disable the button during processing
+            ScrubbingBtn.Enabled = false;
+
+            // Start the scrubbing simulation
+            SimulateScrubbing();
+        }
+
+        private async void SimulateScrubbing()
+        {
+            try
+            {
+                // Reset progress
+                progressBarScrubbing.Value = 0;
+                progressBarScrubbing.Maximum = 100;
+
+                // Phase 1: Reading source data
+                labelProcessing.Text = "Reading source data...";
+                for (int i = 0; i <= 30; i++)
+                {
+                    progressBarScrubbing.Value = i;
+                    await Task.Delay(50);
+                    Application.DoEvents();
+                }
+
+                // Phase 2: Applying scrubbing rules
+                labelProcessing.Text = "Applying scrubbing rules...";
+                for (int i = 31; i <= 70; i++)
+                {
+                    progressBarScrubbing.Value = i;
+                    await Task.Delay(40);
+                    Application.DoEvents();
+                }
+
+                // Phase 3: Saving outputs
+                labelProcessing.Text = "Saving scrubbed data...";
+                for (int i = 71; i <= 100; i++)
+                {
+                    progressBarScrubbing.Value = i;
+                    await Task.Delay(30);
+                    Application.DoEvents();
+                }
+
+                // Complete!
+                labelProcessing.Text = "Scrubbing complete!";
+
+                // Generate mapping key if requested
+                string message = "Data scrubbing completed successfully!";
+                if (checkBoxGenerateMapping.Checked)
+                {
+                    message += "\n\nMapping key has been generated.";
+                }
+
+                MessageBox.Show(message, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // Reset UI
+                progressBarScrubbing.Visible = false;
+                labelProcessing.Visible = false;
+                ScrubbingBtn.Enabled = true;
+
+                // Reset source selection
+                label9.Text = "No Source Selected.";
+                label9.ForeColor = Color.Red;
+                radioFileSource.Checked = false;
+                radioLibrarySource.Checked = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error during scrubbing: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ScrubbingBtn.Enabled = true;
+                progressBarScrubbing.Visible = false;
+                labelProcessing.Visible = false;
+            }
+        }
+
+        private void checkBoxGenerateMapping_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void buttonSaveLocal_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Scrubbed Scan Files|*.zip;*.txt|All Files|*.*";
+            saveFileDialog.Title = "Save Scrubbed Data As";
+            saveFileDialog.DefaultExt = "zip";
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                // Store the selected path (we'll use this when actually saving)
+                // For now, just show confirmation
+                MessageBox.Show($"Will save to: {saveFileDialog.FileName}", "Save Location Set");
+            }
+        }
+
+        private void LibrarySearch_TextChanged(object sender, EventArgs e)
+        {
+            string searchInput = LibrarySearch.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(searchInput))
+            {
+                foreach (DataGridViewRow row in dataGridView1.Rows)
+                {
+                    row.Visible = true;
+                }
+                return;
+            }
+
+            string[] searchTerms = searchInput.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                             .Select(term => term.Trim().ToLower())
+                                             .ToArray();
+
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                bool showRow = true; // Start with true, must match ALL terms
+
+                // Check that ALL search terms are found
+                foreach (string searchTerm in searchTerms)
+                {
+                    bool termFound = false;
+
+                    // Check each cell in the row for this specific term
+                    for (int i = 0; i < row.Cells.Count; i++)
+                    {
+                        if (row.Cells[i].Value != null)
+                        {
+                            string cellValue = row.Cells[i].Value.ToString().ToLower();
+                            string[] words = cellValue.Split(new char[] { ' ', ',', '/', '|', '-' },
+                                                           StringSplitOptions.RemoveEmptyEntries);
+
+                            if (words.Any(word => word.Equals(searchTerm, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                termFound = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // If this term wasn't found, hide the row
+                    if (!termFound)
+                    {
+                        showRow = false;
+                        break;
+                    }
+                }
+
+                row.Visible = showRow;
             }
         }
     }

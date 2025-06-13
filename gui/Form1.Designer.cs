@@ -31,6 +31,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.pictureBox3 = new System.Windows.Forms.PictureBox();
             this.textBox4 = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.textBox3 = new System.Windows.Forms.TextBox();
@@ -49,17 +50,30 @@
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.pictureBox4 = new System.Windows.Forms.PictureBox();
+            this.LibrarySearch = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.ScrubbingBtn = new System.Windows.Forms.Button();
+            this.buttonSaveLocal = new System.Windows.Forms.Button();
+            this.labelProcessing = new System.Windows.Forms.Label();
+            this.progressBarScrubbing = new System.Windows.Forms.ProgressBar();
+            this.checkBoxGenerateMapping = new System.Windows.Forms.CheckBox();
+            this.SaveToLocal = new System.Windows.Forms.CheckBox();
+            this.checkBoxSendToReport = new System.Windows.Forms.CheckBox();
+            this.checkBoxSaveToLibrary = new System.Windows.Forms.CheckBox();
+            this.label10 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.btnSelectSource2 = new System.Windows.Forms.Button();
             this.radioFileSource = new System.Windows.Forms.RadioButton();
             this.radioLibrarySource = new System.Windows.Forms.RadioButton();
             this.label8 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.pictureBox5 = new System.Windows.Forms.PictureBox();
+            this.label12 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label7 = new System.Windows.Forms.Label();
             this.textBox5 = new System.Windows.Forms.TextBox();
@@ -70,15 +84,25 @@
             this.checkBox5 = new System.Windows.Forms.CheckBox();
             this.checkBox4 = new System.Windows.Forms.CheckBox();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.pictureBox6 = new System.Windows.Forms.PictureBox();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabPage2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tabPage3.SuspendLayout();
             this.groupBox3.SuspendLayout();
+            this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox5)).BeginInit();
             this.groupBox1.SuspendLayout();
+            this.tabPage4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            this.tabPage5.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox6)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -98,6 +122,7 @@
             // 
             this.tabPage1.AllowDrop = true;
             this.tabPage1.BackColor = System.Drawing.Color.Lavender;
+            this.tabPage1.Controls.Add(this.pictureBox3);
             this.tabPage1.Controls.Add(this.textBox4);
             this.tabPage1.Controls.Add(this.label6);
             this.tabPage1.Controls.Add(this.textBox3);
@@ -124,6 +149,18 @@
             this.tabPage1.Click += new System.EventHandler(this.tabPage1_Click);
             this.tabPage1.DragDrop += new System.Windows.Forms.DragEventHandler(this.tabPage1_DragDrop);
             this.tabPage1.DragEnter += new System.Windows.Forms.DragEventHandler(this.tabPage1_DragEnter);
+            // 
+            // pictureBox3
+            // 
+            this.pictureBox3.BackColor = System.Drawing.Color.Transparent;
+            this.pictureBox3.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.pictureBox3.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox3.Image")));
+            this.pictureBox3.Location = new System.Drawing.Point(552, 20);
+            this.pictureBox3.Name = "pictureBox3";
+            this.pictureBox3.Size = new System.Drawing.Size(260, 216);
+            this.pictureBox3.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox3.TabIndex = 17;
+            this.pictureBox3.TabStop = false;
             // 
             // textBox4
             // 
@@ -198,9 +235,9 @@
             // pictureBox1
             // 
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.Location = new System.Drawing.Point(68, 6);
+            this.pictureBox1.Location = new System.Drawing.Point(194, 20);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(392, 227);
+            this.pictureBox1.Size = new System.Drawing.Size(326, 216);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 9;
             this.pictureBox1.TabStop = false;
@@ -237,7 +274,7 @@
             // checkBox3
             // 
             this.checkBox3.AutoSize = true;
-            this.checkBox3.Location = new System.Drawing.Point(578, 450);
+            this.checkBox3.Location = new System.Drawing.Point(552, 450);
             this.checkBox3.Name = "checkBox3";
             this.checkBox3.Size = new System.Drawing.Size(170, 20);
             this.checkBox3.TabIndex = 5;
@@ -247,21 +284,21 @@
             // checkBox2
             // 
             this.checkBox2.AutoSize = true;
-            this.checkBox2.Location = new System.Drawing.Point(380, 450);
+            this.checkBox2.Location = new System.Drawing.Point(387, 450);
             this.checkBox2.Name = "checkBox2";
-            this.checkBox2.Size = new System.Drawing.Size(154, 20);
+            this.checkBox2.Size = new System.Drawing.Size(133, 20);
             this.checkBox2.TabIndex = 4;
-            this.checkBox2.Text = "Scrub Sensitive Data";
+            this.checkBox2.Text = "Send to Scrubber";
             this.checkBox2.UseVisualStyleBackColor = true;
             // 
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(195, 450);
+            this.checkBox1.Location = new System.Drawing.Point(172, 450);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(141, 20);
+            this.checkBox1.Size = new System.Drawing.Size(184, 20);
             this.checkBox1.TabIndex = 3;
-            this.checkBox1.Text = "Parse Immediately";
+            this.checkBox1.Text = "Parse and Send to Report";
             this.checkBox1.UseVisualStyleBackColor = true;
             this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
@@ -299,7 +336,9 @@
             // tabPage2
             // 
             this.tabPage2.BackColor = System.Drawing.Color.Lavender;
-            this.tabPage2.Controls.Add(this.textBox2);
+            this.tabPage2.Controls.Add(this.label11);
+            this.tabPage2.Controls.Add(this.pictureBox4);
+            this.tabPage2.Controls.Add(this.LibrarySearch);
             this.tabPage2.Controls.Add(this.label4);
             this.tabPage2.Controls.Add(this.dataGridView1);
             this.tabPage2.Location = new System.Drawing.Point(4, 25);
@@ -309,12 +348,35 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Dataset Library";
             // 
-            // textBox2
+            // label11
             // 
-            this.textBox2.Location = new System.Drawing.Point(269, 98);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(392, 22);
-            this.textBox2.TabIndex = 3;
+            this.label11.AutoSize = true;
+            this.label11.Font = new System.Drawing.Font("Microsoft Sans Serif", 13.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label11.Location = new System.Drawing.Point(351, 37);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(199, 29);
+            this.label11.TabIndex = 19;
+            this.label11.Text = "Stored Datasets";
+            // 
+            // pictureBox4
+            // 
+            this.pictureBox4.BackColor = System.Drawing.Color.Transparent;
+            this.pictureBox4.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.pictureBox4.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox4.Image")));
+            this.pictureBox4.Location = new System.Drawing.Point(846, 3);
+            this.pictureBox4.Name = "pictureBox4";
+            this.pictureBox4.Size = new System.Drawing.Size(120, 111);
+            this.pictureBox4.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox4.TabIndex = 18;
+            this.pictureBox4.TabStop = false;
+            // 
+            // LibrarySearch
+            // 
+            this.LibrarySearch.Location = new System.Drawing.Point(269, 98);
+            this.LibrarySearch.Name = "LibrarySearch";
+            this.LibrarySearch.Size = new System.Drawing.Size(392, 22);
+            this.LibrarySearch.TabIndex = 3;
+            this.LibrarySearch.TextChanged += new System.EventHandler(this.LibrarySearch_TextChanged);
             // 
             // label4
             // 
@@ -335,7 +397,6 @@
             this.dataGridView1.RowTemplate.Height = 24;
             this.dataGridView1.Size = new System.Drawing.Size(957, 475);
             this.dataGridView1.TabIndex = 1;
-            this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
             // 
             // tabPage3
             // 
@@ -352,6 +413,15 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.ScrubbingBtn);
+            this.groupBox3.Controls.Add(this.buttonSaveLocal);
+            this.groupBox3.Controls.Add(this.labelProcessing);
+            this.groupBox3.Controls.Add(this.progressBarScrubbing);
+            this.groupBox3.Controls.Add(this.checkBoxGenerateMapping);
+            this.groupBox3.Controls.Add(this.SaveToLocal);
+            this.groupBox3.Controls.Add(this.checkBoxSendToReport);
+            this.groupBox3.Controls.Add(this.checkBoxSaveToLibrary);
+            this.groupBox3.Controls.Add(this.label10);
             this.groupBox3.Controls.Add(this.label9);
             this.groupBox3.Controls.Add(this.btnSelectSource2);
             this.groupBox3.Controls.Add(this.radioFileSource);
@@ -364,6 +434,100 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Actions";
             this.groupBox3.Enter += new System.EventHandler(this.groupBox3_Enter);
+            // 
+            // ScrubbingBtn
+            // 
+            this.ScrubbingBtn.Location = new System.Drawing.Point(369, 130);
+            this.ScrubbingBtn.Name = "ScrubbingBtn";
+            this.ScrubbingBtn.Size = new System.Drawing.Size(141, 23);
+            this.ScrubbingBtn.TabIndex = 12;
+            this.ScrubbingBtn.Text = "Start Scrubbing";
+            this.ScrubbingBtn.UseVisualStyleBackColor = true;
+            this.ScrubbingBtn.Click += new System.EventHandler(this.ScrubbingBtn_Click);
+            // 
+            // buttonSaveLocal
+            // 
+            this.buttonSaveLocal.Location = new System.Drawing.Point(719, 79);
+            this.buttonSaveLocal.Name = "buttonSaveLocal";
+            this.buttonSaveLocal.Size = new System.Drawing.Size(75, 23);
+            this.buttonSaveLocal.TabIndex = 11;
+            this.buttonSaveLocal.Text = "Browse";
+            this.buttonSaveLocal.UseVisualStyleBackColor = true;
+            this.buttonSaveLocal.Visible = false;
+            this.buttonSaveLocal.Click += new System.EventHandler(this.buttonSaveLocal_Click);
+            // 
+            // labelProcessing
+            // 
+            this.labelProcessing.AutoSize = true;
+            this.labelProcessing.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelProcessing.Location = new System.Drawing.Point(587, 177);
+            this.labelProcessing.Name = "labelProcessing";
+            this.labelProcessing.Size = new System.Drawing.Size(95, 18);
+            this.labelProcessing.TabIndex = 10;
+            this.labelProcessing.Text = "Processing...";
+            this.labelProcessing.Visible = false;
+            this.labelProcessing.Click += new System.EventHandler(this.label11_Click);
+            // 
+            // progressBarScrubbing
+            // 
+            this.progressBarScrubbing.Location = new System.Drawing.Point(296, 177);
+            this.progressBarScrubbing.Name = "progressBarScrubbing";
+            this.progressBarScrubbing.Size = new System.Drawing.Size(285, 18);
+            this.progressBarScrubbing.TabIndex = 9;
+            this.progressBarScrubbing.Visible = false;
+            // 
+            // checkBoxGenerateMapping
+            // 
+            this.checkBoxGenerateMapping.AutoSize = true;
+            this.checkBoxGenerateMapping.Location = new System.Drawing.Point(534, 132);
+            this.checkBoxGenerateMapping.Name = "checkBoxGenerateMapping";
+            this.checkBoxGenerateMapping.Size = new System.Drawing.Size(167, 20);
+            this.checkBoxGenerateMapping.TabIndex = 3;
+            this.checkBoxGenerateMapping.Text = "Generate Mapping Key";
+            this.checkBoxGenerateMapping.UseVisualStyleBackColor = true;
+            this.checkBoxGenerateMapping.CheckedChanged += new System.EventHandler(this.checkBoxGenerateMapping_CheckedChanged);
+            // 
+            // SaveToLocal
+            // 
+            this.SaveToLocal.AutoSize = true;
+            this.SaveToLocal.Location = new System.Drawing.Point(545, 82);
+            this.SaveToLocal.Name = "SaveToLocal";
+            this.SaveToLocal.Size = new System.Drawing.Size(168, 20);
+            this.SaveToLocal.TabIndex = 7;
+            this.SaveToLocal.Text = "Save to Local Machine:";
+            this.SaveToLocal.UseVisualStyleBackColor = true;
+            this.SaveToLocal.CheckedChanged += new System.EventHandler(this.SaveToLocal_CheckedChanged);
+            // 
+            // checkBoxSendToReport
+            // 
+            this.checkBoxSendToReport.AutoSize = true;
+            this.checkBoxSendToReport.Location = new System.Drawing.Point(342, 82);
+            this.checkBoxSendToReport.Name = "checkBoxSendToReport";
+            this.checkBoxSendToReport.Size = new System.Drawing.Size(182, 20);
+            this.checkBoxSendToReport.TabIndex = 6;
+            this.checkBoxSendToReport.Text = "Send to Report Generator";
+            this.checkBoxSendToReport.UseVisualStyleBackColor = true;
+            this.checkBoxSendToReport.CheckedChanged += new System.EventHandler(this.checkBox11_CheckedChanged);
+            // 
+            // checkBoxSaveToLibrary
+            // 
+            this.checkBoxSaveToLibrary.AutoSize = true;
+            this.checkBoxSaveToLibrary.Location = new System.Drawing.Point(154, 82);
+            this.checkBoxSaveToLibrary.Name = "checkBoxSaveToLibrary";
+            this.checkBoxSaveToLibrary.Size = new System.Drawing.Size(169, 20);
+            this.checkBoxSaveToLibrary.TabIndex = 5;
+            this.checkBoxSaveToLibrary.Text = "Save to Dataset Library";
+            this.checkBoxSaveToLibrary.UseVisualStyleBackColor = true;
+            this.checkBoxSaveToLibrary.CheckedChanged += new System.EventHandler(this.checkBox10_CheckedChanged);
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(16, 82);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(118, 16);
+            this.label10.TabIndex = 3;
+            this.label10.Text = "Output Destination:";
             // 
             // label9
             // 
@@ -384,6 +548,7 @@
             this.btnSelectSource2.TabIndex = 3;
             this.btnSelectSource2.Text = "Browse";
             this.btnSelectSource2.UseVisualStyleBackColor = true;
+            this.btnSelectSource2.Visible = false;
             this.btnSelectSource2.Click += new System.EventHandler(this.btnSelectSource2_Click);
             // 
             // radioFileSource
@@ -391,10 +556,10 @@
             this.radioFileSource.AutoSize = true;
             this.radioFileSource.Location = new System.Drawing.Point(234, 31);
             this.radioFileSource.Name = "radioFileSource";
-            this.radioFileSource.Size = new System.Drawing.Size(141, 20);
+            this.radioFileSource.Size = new System.Drawing.Size(138, 20);
             this.radioFileSource.TabIndex = 2;
             this.radioFileSource.TabStop = true;
-            this.radioFileSource.Text = "File from computer.";
+            this.radioFileSource.Text = "File from computer";
             this.radioFileSource.UseVisualStyleBackColor = true;
             this.radioFileSource.CheckedChanged += new System.EventHandler(this.radioFileSource_CheckedChanged);
             // 
@@ -403,10 +568,10 @@
             this.radioLibrarySource.AutoSize = true;
             this.radioLibrarySource.Location = new System.Drawing.Point(106, 31);
             this.radioLibrarySource.Name = "radioLibrarySource";
-            this.radioLibrarySource.Size = new System.Drawing.Size(122, 20);
+            this.radioLibrarySource.Size = new System.Drawing.Size(119, 20);
             this.radioLibrarySource.TabIndex = 1;
             this.radioLibrarySource.TabStop = true;
-            this.radioLibrarySource.Text = "Dataset Library.";
+            this.radioLibrarySource.Text = "Dataset Library";
             this.radioLibrarySource.UseVisualStyleBackColor = true;
             this.radioLibrarySource.CheckedChanged += new System.EventHandler(this.radioLibrarySource_CheckedChanged);
             // 
@@ -422,12 +587,37 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.pictureBox5);
+            this.groupBox2.Controls.Add(this.label12);
             this.groupBox2.Location = new System.Drawing.Point(470, 8);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(495, 366);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Advanced Scrubbing Rules";
+            // 
+            // pictureBox5
+            // 
+            this.pictureBox5.BackColor = System.Drawing.Color.Transparent;
+            this.pictureBox5.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.pictureBox5.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox5.Image")));
+            this.pictureBox5.Location = new System.Drawing.Point(362, -8);
+            this.pictureBox5.Name = "pictureBox5";
+            this.pictureBox5.Size = new System.Drawing.Size(139, 110);
+            this.pictureBox5.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox5.TabIndex = 19;
+            this.pictureBox5.TabStop = false;
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label12.Location = new System.Drawing.Point(101, 154);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(319, 32);
+            this.label12.TabIndex = 0;
+            this.label12.Text = "Feature Coming Soon!";
+            this.label12.Click += new System.EventHandler(this.label12_Click);
             // 
             // groupBox1
             // 
@@ -537,6 +727,9 @@
             // tabPage4
             // 
             this.tabPage4.BackColor = System.Drawing.Color.RoyalBlue;
+            this.tabPage4.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("tabPage4.BackgroundImage")));
+            this.tabPage4.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.tabPage4.Controls.Add(this.pictureBox2);
             this.tabPage4.Location = new System.Drawing.Point(4, 25);
             this.tabPage4.Name = "tabPage4";
             this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
@@ -544,15 +737,39 @@
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "Generate Report";
             // 
+            // pictureBox2
+            // 
+            this.pictureBox2.BackColor = System.Drawing.Color.Transparent;
+            this.pictureBox2.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox2.Image")));
+            this.pictureBox2.Location = new System.Drawing.Point(-51, 121);
+            this.pictureBox2.Name = "pictureBox2";
+            this.pictureBox2.Size = new System.Drawing.Size(831, 400);
+            this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+            this.pictureBox2.TabIndex = 0;
+            this.pictureBox2.TabStop = false;
+            // 
             // tabPage5
             // 
-            this.tabPage5.BackColor = System.Drawing.Color.RoyalBlue;
+            this.tabPage5.BackColor = System.Drawing.Color.Lavender;
+            this.tabPage5.Controls.Add(this.pictureBox6);
             this.tabPage5.Location = new System.Drawing.Point(4, 25);
             this.tabPage5.Name = "tabPage5";
             this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage5.Size = new System.Drawing.Size(971, 623);
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "Settings";
+            // 
+            // pictureBox6
+            // 
+            this.pictureBox6.BackColor = System.Drawing.Color.Transparent;
+            this.pictureBox6.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.pictureBox6.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox6.Image")));
+            this.pictureBox6.Location = new System.Drawing.Point(826, 6);
+            this.pictureBox6.Name = "pictureBox6";
+            this.pictureBox6.Size = new System.Drawing.Size(139, 110);
+            this.pictureBox6.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox6.TabIndex = 19;
+            this.pictureBox6.TabStop = false;
             // 
             // Form1
             // 
@@ -567,15 +784,25 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.tabPage3.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox5)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.tabPage4.ResumeLayout(false);
+            this.tabPage4.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            this.tabPage5.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox6)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -603,7 +830,7 @@
         private System.Windows.Forms.Label lblFileStatus;
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox LibrarySearch;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox textBox3;
         private System.Windows.Forms.Label label6;
@@ -624,6 +851,22 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Button btnSelectSource2;
         private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.CheckBox SaveToLocal;
+        private System.Windows.Forms.CheckBox checkBoxSendToReport;
+        private System.Windows.Forms.CheckBox checkBoxSaveToLibrary;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.ProgressBar progressBarScrubbing;
+        private System.Windows.Forms.CheckBox checkBoxGenerateMapping;
+        private System.Windows.Forms.Label labelProcessing;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Button buttonSaveLocal;
+        private System.Windows.Forms.Button ScrubbingBtn;
+        private System.Windows.Forms.PictureBox pictureBox2;
+        private System.Windows.Forms.PictureBox pictureBox3;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.PictureBox pictureBox4;
+        private System.Windows.Forms.PictureBox pictureBox5;
+        private System.Windows.Forms.PictureBox pictureBox6;
     }
 }
 
