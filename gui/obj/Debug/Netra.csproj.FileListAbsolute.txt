@@ -18,7 +18,6 @@ C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\Netra\obj\Debug\Netra.cs
 C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\Netra\obj\Debug\Netra.exe
 C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\Netra\obj\Debug\Netra.pdb
 C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\gui\obj\Debug\Netra.csproj.AssemblyReference.cache
-C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\gui\obj\Debug\Netra.Form1.resources
 C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\gui\obj\Debug\Netra.csproj.GenerateResource.cache
 C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\gui\bin\Debug\Netra.exe.config
 C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\gui\bin\Debug\Netra.exe
@@ -37,3 +36,4 @@ C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\gui\obj\Debug\Netra.cspr
 C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\gui\obj\Debug\Netra.exe
 C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\gui\obj\Debug\Netra.pdb
 C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\gui\obj\Debug\Netra.exe.config
+C:\Users\briis\Desktop\Semester 4\Capstone\Github\netra\gui\obj\Debug\Netra.Form1.resources

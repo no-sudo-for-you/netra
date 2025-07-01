@@ -8,17 +8,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using System.Diagnostics;
 
 namespace Netra
 {
     public partial class Form1 : Form
     {
+        // Member variables for parser integration
+        private List<string> selectedFiles = new List<string>();
+        private List<SimpleAsset> parsedAssets = new List<SimpleAsset>();
+
         public Form1()
         {
             InitializeComponent();
             SetupDatasetLibrary();
-
         }
 
         private void SetupDatasetLibrary()
@@ -94,8 +97,8 @@ namespace Netra
             // Show the dialog and check if user clicked OK
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                // Get all selected file paths
-                string[] selectedFiles = openFileDialog.FileNames;
+                // Store selected files for parser integration
+                selectedFiles = openFileDialog.FileNames.ToList();
 
                 // Validate file types
                 List<string> validFiles = new List<string>();
@@ -113,6 +116,9 @@ namespace Netra
                         invalidFiles.Add(file);
                     }
                 }
+
+                // Keep only valid files for parser
+                selectedFiles = validFiles;
 
                 // Update the textbox based on results
                 if (validFiles.Count == 1)
@@ -156,25 +162,340 @@ namespace Netra
         private void button2_Click(object sender, EventArgs e)
         {
             // Check if user has selected files
-            if (string.IsNullOrEmpty(textBox1.Text))
+            if (selectedFiles.Count == 0)
             {
                 MessageBox.Show("Please select files first!", "No Files Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // Show the progress bar and status label
-            progressBar1.Visible = true;
-            label2.Visible = true;
+            // Check what actions are selected
+            bool parseAndReport = checkBox1.Checked; // Parse and Send to Report
+            bool sendToScrubber = checkBox2.Checked; // Send to Scrubber  
+            bool saveToDatabase = checkBox3.Checked; // Save Data to Database
 
-            // Reset progress bar
-            progressBar1.Value = 0;
-            progressBar1.Maximum = 100;
+            if (!parseAndReport && !sendToScrubber && !saveToDatabase)
+            {
+                MessageBox.Show("Please select at least one action!", "No Action Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-            // Disable the upload button during processing
-            button2.Enabled = false;
+            if (parseAndReport)
+            {
+                // Run the REAL Python parser and show asset selection
+                RunRealParserAndShowAssets();
+            }
+            else
+            {
+                // Keep your existing upload simulation for other actions
+                progressBar1.Visible = true;
+                label2.Visible = true;
+                progressBar1.Value = 0;
+                progressBar1.Maximum = 100;
+                button2.Enabled = false;
+                SimulateUpload();
+            }
+        }
 
-            // Start the upload simulation
-            SimulateUpload();
+        private async void RunRealParserAndShowAssets()
+        {
+            try
+            {
+                progressBar1.Visible = true;
+                label2.Visible = true;
+                label2.Text = "Running nmap parser...";
+                progressBar1.Value = 0;
+                button2.Enabled = false;
+
+                // Phase 1: Setup
+                for (int i = 0; i <= 20; i++)
+                {
+                    progressBar1.Value = i;
+                    await Task.Delay(50);
+                    Application.DoEvents();
+                }
+
+                // Phase 2: Run Python parser
+                label2.Text = "Parsing scan files...";
+                string jsonOutput = await RunPythonParser(selectedFiles);
+
+                for (int i = 21; i <= 60; i++)
+                {
+                    progressBar1.Value = i;
+                    await Task.Delay(30);
+                    Application.DoEvents();
+                }
+
+                if (string.IsNullOrEmpty(jsonOutput))
+                {
+                    MessageBox.Show("Failed to parse scan files. Please check that Python is installed and the parser script is in the correct location.", "Parse Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ResetUploadUI();
+                    return;
+                }
+
+                // Phase 3: Parse JSON results
+                label2.Text = "Processing results...";
+                parsedAssets = ParseJsonResults(jsonOutput);
+
+                for (int i = 61; i <= 100; i++)
+                {
+                    progressBar1.Value = i;
+                    await Task.Delay(20);
+                    Application.DoEvents();
+                }
+
+                ResetUploadUI();
+
+                if (parsedAssets.Count == 0)
+                {
+                    MessageBox.Show("No assets found in scan files. Please check that the files contain valid nmap output.", "No Assets Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Show asset selection form
+                ShowSimpleAssetSelection();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error during parsing: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ResetUploadUI();
+            }
+        }
+
+        private void ResetUploadUI()
+        {
+            progressBar1.Visible = false;
+            label2.Visible = false;
+            button2.Enabled = true;
+        }
+
+        private async Task<string> RunPythonParser(List<string> filePaths)
+        {
+            try
+            {
+                // Create a temporary JSON file for output
+                string tempOutputFile = Path.GetTempFileName() + ".json";
+                string pythonScript = Path.Combine(Application.StartupPath, "parser", "nmap_parser.py");
+
+                // Check if Python script exists
+                if (!File.Exists(pythonScript))
+                {
+                    MessageBox.Show($"Python parser not found at: {pythonScript}\n\nPlease create a 'parser' folder in your application directory and copy nmap_parser.py into it.", "Parser Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return null;
+                }
+
+                // Build command line arguments
+                string arguments = $"parse --export \"{tempOutputFile}\"";
+                foreach (string file in filePaths)
+                {
+                    arguments += $" \"{file}\"";
+                }
+
+                // Run Python script
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = "python",
+                    Arguments = $"\"{pythonScript}\" {arguments}",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                using (Process process = Process.Start(startInfo))
+                {
+                    await Task.Run(() => process.WaitForExit());
+
+                    if (process.ExitCode != 0)
+                    {
+                        string error = process.StandardError.ReadToEnd();
+                        string output = process.StandardOutput.ReadToEnd();
+                        MessageBox.Show($"Python parser failed:\n\nError: {error}\n\nOutput: {output}\n\nMake sure Python is installed and accessible from command line.", "Parser Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return null;
+                    }
+                }
+
+                // Read the JSON output
+                if (File.Exists(tempOutputFile))
+                {
+                    string jsonContent = File.ReadAllText(tempOutputFile);
+                    File.Delete(tempOutputFile); // Clean up
+                    return jsonContent;
+                }
+                else
+                {
+                    MessageBox.Show("Parser did not generate output file.", "Parser Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error running Python parser: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
+            }
+        }
+
+        private List<SimpleAsset> ParseJsonResults(string jsonContent)
+        {
+            var assets = new List<SimpleAsset>();
+
+            try
+            {
+                // Simple JSON parsing without external libraries
+                // We'll extract the basic asset information
+
+                // Look for the assets array in the JSON
+                int assetsIndex = jsonContent.IndexOf("\"assets\":");
+                if (assetsIndex == -1) return assets;
+
+                // Find the start of the array
+                int arrayStart = jsonContent.IndexOf("[", assetsIndex);
+                if (arrayStart == -1) return assets;
+
+                // Find the matching closing bracket
+                int bracketCount = 0;
+                int arrayEnd = arrayStart;
+                for (int i = arrayStart; i < jsonContent.Length; i++)
+                {
+                    if (jsonContent[i] == '[') bracketCount++;
+                    if (jsonContent[i] == ']') bracketCount--;
+                    if (bracketCount == 0)
+                    {
+                        arrayEnd = i;
+                        break;
+                    }
+                }
+
+                string assetsJson = jsonContent.Substring(arrayStart + 1, arrayEnd - arrayStart - 1);
+
+                // Split by asset objects (look for ip_address pattern)
+                var assetMatches = System.Text.RegularExpressions.Regex.Matches(assetsJson, @"""ip_address"":\s*""([^""]+)""");
+                var hostnameMatches = System.Text.RegularExpressions.Regex.Matches(assetsJson, @"""hostname"":\s*""([^""]*)""");
+                var vendorMatches = System.Text.RegularExpressions.Regex.Matches(assetsJson, @"""vendor"":\s*""([^""]*)""");
+                var portCountMatches = System.Text.RegularExpressions.Regex.Matches(assetsJson, @"""open_port_count"":\s*(\d+)");
+                var servicesMatches = System.Text.RegularExpressions.Regex.Matches(assetsJson, @"""open_services"":\s*""([^""]*)""");
+
+                // Create assets from the matches
+                for (int i = 0; i < assetMatches.Count; i++)
+                {
+                    var asset = new SimpleAsset
+                    {
+                        IpAddress = assetMatches[i].Groups[1].Value,
+                        Hostname = i < hostnameMatches.Count ? hostnameMatches[i].Groups[1].Value : "",
+                        Vendor = i < vendorMatches.Count ? vendorMatches[i].Groups[1].Value : "Unknown",
+                        OpenPortCount = i < portCountMatches.Count ? int.Parse(portCountMatches[i].Groups[1].Value) : 0,
+                        OpenServices = i < servicesMatches.Count ? servicesMatches[i].Groups[1].Value : "",
+                        SelectedForReport = true
+                    };
+
+                    assets.Add(asset);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error parsing JSON results: {ex.Message}", "Parse Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            return assets;
+        }
+
+        private void ShowSimpleAssetSelection()
+        {
+            // Create a simple form to show the parsed assets
+            Form assetForm = new Form
+            {
+                Text = "Select Assets for Report",
+                Size = new Size(800, 500),
+                StartPosition = FormStartPosition.CenterParent
+            };
+
+            // Create a ListView to show assets
+            ListView listView = new ListView
+            {
+                View = View.Details,
+                CheckBoxes = true,
+                FullRowSelect = true,
+                GridLines = true,
+                Location = new Point(10, 10),
+                Size = new Size(760, 350)
+            };
+
+            // Add columns
+            listView.Columns.Add("IP Address", 120);
+            listView.Columns.Add("Hostname", 150);
+            listView.Columns.Add("Vendor", 120);
+            listView.Columns.Add("Open Ports", 80);
+            listView.Columns.Add("Services", 270);
+
+            // Add assets to the list
+            foreach (var asset in parsedAssets)
+            {
+                ListViewItem item = new ListViewItem(asset.IpAddress);
+                item.SubItems.Add(asset.Hostname ?? "");
+                item.SubItems.Add(asset.Vendor ?? "Unknown");
+                item.SubItems.Add(asset.OpenPortCount.ToString());
+                item.SubItems.Add(asset.OpenServices ?? "");
+                item.Checked = asset.SelectedForReport;
+                item.Tag = asset;
+                listView.Items.Add(item);
+            }
+
+            // Add buttons
+            Button btnOk = new Button
+            {
+                Text = "Generate Report",
+                Location = new Point(600, 380),
+                Size = new Size(100, 30)
+            };
+
+            Button btnCancel = new Button
+            {
+                Text = "Cancel",
+                Location = new Point(710, 380),
+                Size = new Size(60, 30)
+            };
+
+            // Add summary label
+            Label lblSummary = new Label
+            {
+                Text = $"Found {parsedAssets.Count} assets from scan files",
+                Location = new Point(10, 385),
+                Size = new Size(400, 20)
+            };
+
+            // Add controls to form
+            assetForm.Controls.Add(listView);
+            assetForm.Controls.Add(btnOk);
+            assetForm.Controls.Add(btnCancel);
+            assetForm.Controls.Add(lblSummary);
+
+            // Event handlers
+            btnOk.Click += (s, e) =>
+            {
+                var selectedAssets = new List<SimpleAsset>();
+                foreach (ListViewItem item in listView.Items)
+                {
+                    if (item.Checked)
+                    {
+                        selectedAssets.Add((SimpleAsset)item.Tag);
+                    }
+                }
+
+                assetForm.DialogResult = DialogResult.OK;
+                assetForm.Close();
+
+                // Show confirmation
+                MessageBox.Show($"Selected {selectedAssets.Count} assets for report generation.\n\nReport generation functionality will be implemented next!", "Assets Selected", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            };
+
+            btnCancel.Click += (s, e) =>
+            {
+                assetForm.DialogResult = DialogResult.Cancel;
+                assetForm.Close();
+            };
+
+            // Show the form
+            assetForm.ShowDialog();
         }
 
         private async void SimulateUpload()
@@ -217,7 +538,6 @@ namespace Netra
                 label2.Visible = false;
                 button2.Enabled = true;
                 textBox1.Text = "";
-
                 lblFileStatus.Text = "No files selected";
                 lblFileStatus.ForeColor = Color.Red;
             }
@@ -314,6 +634,9 @@ namespace Netra
             // Get the dropped files
             string[] droppedFiles = (string[])e.Data.GetData(DataFormats.FileDrop);
 
+            // Store selected files for parser integration
+            selectedFiles = droppedFiles.ToList();
+
             // Validate file types (same logic as Browse button)
             List<string> validFiles = new List<string>();
             List<string> invalidFiles = new List<string>();
@@ -330,6 +653,9 @@ namespace Netra
                     invalidFiles.Add(file);
                 }
             }
+
+            // Keep only valid files for parser
+            selectedFiles = validFiles;
 
             // Update the textbox based on results
             if (validFiles.Count == 1)
@@ -368,6 +694,9 @@ namespace Netra
             // Get the dropped files
             string[] droppedFiles = (string[])e.Data.GetData(DataFormats.FileDrop);
 
+            // Store selected files for parser integration
+            selectedFiles = droppedFiles.ToList();
+
             // Validate file types (same logic as Browse button)
             List<string> validFiles = new List<string>();
             List<string> invalidFiles = new List<string>();
@@ -384,6 +713,9 @@ namespace Netra
                     invalidFiles.Add(file);
                 }
             }
+
+            // Keep only valid files for parser
+            selectedFiles = validFiles;
 
             // Update the textbox based on results
             if (validFiles.Count == 1)
@@ -515,6 +847,7 @@ namespace Netra
         {
 
         }
+
         private void textBox5_Enter(object sender, EventArgs e)
         {
             TextBox tb = sender as TextBox;
@@ -524,6 +857,7 @@ namespace Netra
                 tb.ForeColor = Color.Black;
             }
         }
+
         private void textBox5_Leave(object sender, EventArgs e)
         {
             TextBox tb = sender as TextBox;
@@ -580,7 +914,8 @@ namespace Netra
             {
                 btnSelectSource2.Text = "Browse Files...";
                 btnSelectSource2.Visible = true; // Show browse button
-                                                 // Reset selection status
+
+                // Reset selection status
                 label9.Text = "No Source Selected.";
                 label9.ForeColor = Color.Red;
             }
@@ -592,7 +927,8 @@ namespace Netra
             {
                 btnSelectSource2.Text = "Select from Library";
                 btnSelectSource2.Visible = true; // Show browse button
-                                                 // Reset selection status
+
+                // Reset selection status
                 label9.Text = "No Source Selected.";
                 label9.ForeColor = Color.Red;
             }
@@ -667,6 +1003,7 @@ namespace Netra
 
             // Check if at least one output destination is selected
             bool hasOutput = checkBoxSaveToLibrary.Checked || SaveToLocal.Checked || checkBoxSendToReport.Checked;
+
             if (!hasOutput)
             {
                 MessageBox.Show("Please select at least one output destination!", "No Output Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -785,8 +1122,8 @@ namespace Netra
             }
 
             string[] searchTerms = searchInput.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                                             .Select(term => term.Trim().ToLower())
-                                             .ToArray();
+                .Select(term => term.Trim().ToLower())
+                .ToArray();
 
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
@@ -804,7 +1141,7 @@ namespace Netra
                         {
                             string cellValue = row.Cells[i].Value.ToString().ToLower();
                             string[] words = cellValue.Split(new char[] { ' ', ',', '/', '|', '-' },
-                                                           StringSplitOptions.RemoveEmptyEntries);
+                                StringSplitOptions.RemoveEmptyEntries);
 
                             if (words.Any(word => word.Equals(searchTerm, StringComparison.OrdinalIgnoreCase)))
                             {
@@ -825,5 +1162,21 @@ namespace Netra
                 row.Visible = showRow;
             }
         }
+
+        private void dataGridView1_CellContentClick_1(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
     }
+}
+
+// Simple data classes for the parser integration
+public class SimpleAsset
+{
+    public string IpAddress { get; set; }
+    public string Hostname { get; set; }
+    public string Vendor { get; set; }
+    public int OpenPortCount { get; set; }
+    public string OpenServices { get; set; }
+    public bool SelectedForReport { get; set; } = true;
 }
