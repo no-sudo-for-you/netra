@@ -273,9 +273,9 @@
             this.checkBox3.AutoSize = true;
             this.checkBox3.Location = new System.Drawing.Point(552, 450);
             this.checkBox3.Name = "checkBox3";
-            this.checkBox3.Size = new System.Drawing.Size(170, 20);
+            this.checkBox3.Size = new System.Drawing.Size(235, 20);
             this.checkBox3.TabIndex = 5;
-            this.checkBox3.Text = "Save Data to Database";
+            this.checkBox3.Text = "Parse and Save Data to Database";
             this.checkBox3.UseVisualStyleBackColor = true;
             // 
             // checkBox2
