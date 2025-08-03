@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace Netra
 {
-    // Dataset model class
+    // Dataset model class - UPDATED to use AllServices instead of TopServices
     public class Dataset
     {
         public int Id { get; set; }
@@ -16,7 +16,7 @@ namespace Netra
         public DateTime ScanDate { get; set; }
         public int TotalAssets { get; set; }
         public int ActiveAssets { get; set; }
-        public string TopServices { get; set; }
+        public string AllServices { get; set; }  // CHANGED from TopServices to AllServices
         public int ScansProcessed { get; set; }
         public string RiskLevel { get; set; }
         public DateTime LastModified { get; set; }
@@ -25,7 +25,7 @@ namespace Netra
         public DateTime CreatedDate { get; set; }
     }
 
-    // Database manager class
+    // Database manager class - UPDATED to use AllServices
     public class DatasetManager
     {
         private string connectionString;
@@ -47,7 +47,48 @@ namespace Netra
             {
                 connection.Open();
 
-                // Create Datasets table
+                // Check if we need to update the database schema
+                bool needsSchemaUpdate = false;
+                string checkColumnQuery = "PRAGMA table_info(Datasets)";
+                using (var command = new SQLiteCommand(checkColumnQuery, connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    bool hasAllServices = false;
+                    bool hasTopServices = false;
+
+                    while (reader.Read())
+                    {
+                        string columnName = reader.GetString(1); // Column name is at index 1 in PRAGMA table_info
+                        if (columnName == "AllServices") hasAllServices = true;
+                        if (columnName == "TopServices") hasTopServices = true;
+                    }
+
+                    // If we have TopServices but not AllServices, we need to update
+                    if (hasTopServices && !hasAllServices)
+                    {
+                        needsSchemaUpdate = true;
+                    }
+                }
+
+                // Update schema if needed
+                if (needsSchemaUpdate)
+                {
+                    // Add AllServices column
+                    string addColumnQuery = "ALTER TABLE Datasets ADD COLUMN AllServices TEXT DEFAULT ''";
+                    using (var command = new SQLiteCommand(addColumnQuery, connection))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+
+                    // Copy data from TopServices to AllServices
+                    string copyDataQuery = "UPDATE Datasets SET AllServices = TopServices";
+                    using (var command = new SQLiteCommand(copyDataQuery, connection))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                // Create Datasets table (with AllServices)
                 string createDatasetsTable = @"
                     CREATE TABLE IF NOT EXISTS Datasets (
                         Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,7 +96,7 @@ namespace Netra
                         ScanDate TEXT NOT NULL,
                         TotalAssets INTEGER DEFAULT 0,
                         ActiveAssets INTEGER DEFAULT 0,
-                        TopServices TEXT DEFAULT '',
+                        AllServices TEXT DEFAULT '',
                         ScansProcessed INTEGER DEFAULT 0,
                         RiskLevel TEXT DEFAULT '',
                         LastModified TEXT NOT NULL,
@@ -93,8 +134,28 @@ namespace Netra
         // Helper method to safely get string from database reader
         private string GetSafeString(SQLiteDataReader reader, string columnName)
         {
-            int ordinal = reader.GetOrdinal(columnName);
-            return reader.IsDBNull(ordinal) ? "" : reader.GetString(ordinal);
+            try
+            {
+                int ordinal = reader.GetOrdinal(columnName);
+                return reader.IsDBNull(ordinal) ? "" : reader.GetString(ordinal);
+            }
+            catch
+            {
+                // If column doesn't exist, try the alternative name or return empty string
+                if (columnName == "AllServices")
+                {
+                    try
+                    {
+                        int ordinal = reader.GetOrdinal("TopServices");
+                        return reader.IsDBNull(ordinal) ? "" : reader.GetString(ordinal);
+                    }
+                    catch
+                    {
+                        return "";
+                    }
+                }
+                return "";
+            }
         }
 
         // Helper method to safely get int from database reader
@@ -127,11 +188,11 @@ namespace Netra
                 {
                     try
                     {
-                        // Insert dataset
+                        // Insert dataset - UPDATED to use AllServices
                         string insertDataset = @"
-                            INSERT INTO Datasets (CompanyName, ScanDate, TotalAssets, ActiveAssets, TopServices, 
+                            INSERT INTO Datasets (CompanyName, ScanDate, TotalAssets, ActiveAssets, AllServices, 
                                                  ScansProcessed, RiskLevel, LastModified, FileNotes, OriginalFiles, CreatedDate)
-                            VALUES (@CompanyName, @ScanDate, @TotalAssets, @ActiveAssets, @TopServices, 
+                            VALUES (@CompanyName, @ScanDate, @TotalAssets, @ActiveAssets, @AllServices, 
                                    @ScansProcessed, @RiskLevel, @LastModified, @FileNotes, @OriginalFiles, @CreatedDate)";
 
                         int datasetId;
@@ -141,7 +202,7 @@ namespace Netra
                             command.Parameters.AddWithValue("@ScanDate", dataset.ScanDate.ToString("yyyy-MM-dd"));
                             command.Parameters.AddWithValue("@TotalAssets", dataset.TotalAssets);
                             command.Parameters.AddWithValue("@ActiveAssets", dataset.ActiveAssets);
-                            command.Parameters.AddWithValue("@TopServices", dataset.TopServices ?? "");
+                            command.Parameters.AddWithValue("@AllServices", dataset.AllServices ?? "");  // CHANGED
                             command.Parameters.AddWithValue("@ScansProcessed", dataset.ScansProcessed);
                             command.Parameters.AddWithValue("@RiskLevel", dataset.RiskLevel ?? "");
                             command.Parameters.AddWithValue("@LastModified", dataset.LastModified.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -208,7 +269,7 @@ namespace Netra
                             ScanDate = GetSafeDateTime(reader, "ScanDate"),
                             TotalAssets = GetSafeInt(reader, "TotalAssets"),
                             ActiveAssets = GetSafeInt(reader, "ActiveAssets"),
-                            TopServices = GetSafeString(reader, "TopServices"),
+                            AllServices = GetSafeString(reader, "AllServices"),  // CHANGED
                             ScansProcessed = GetSafeInt(reader, "ScansProcessed"),
                             RiskLevel = GetSafeString(reader, "RiskLevel"),
                             LastModified = GetSafeDateTime(reader, "LastModified"),
@@ -244,7 +305,7 @@ namespace Netra
                                 ScanDate = GetSafeDateTime(reader, "ScanDate"),
                                 TotalAssets = GetSafeInt(reader, "TotalAssets"),
                                 ActiveAssets = GetSafeInt(reader, "ActiveAssets"),
-                                TopServices = GetSafeString(reader, "TopServices"),
+                                AllServices = GetSafeString(reader, "AllServices"),  // CHANGED
                                 ScansProcessed = GetSafeInt(reader, "ScansProcessed"),
                                 RiskLevel = GetSafeString(reader, "RiskLevel"),
                                 LastModified = GetSafeDateTime(reader, "LastModified"),
@@ -299,7 +360,7 @@ namespace Netra
                 string query = @"
                     UPDATE Datasets 
                     SET CompanyName = @CompanyName, ScanDate = @ScanDate, TotalAssets = @TotalAssets,
-                        ActiveAssets = @ActiveAssets, TopServices = @TopServices, ScansProcessed = @ScansProcessed,
+                        ActiveAssets = @ActiveAssets, AllServices = @AllServices, ScansProcessed = @ScansProcessed,
                         RiskLevel = @RiskLevel, LastModified = @LastModified, FileNotes = @FileNotes
                     WHERE Id = @Id";
 
@@ -310,7 +371,7 @@ namespace Netra
                     command.Parameters.AddWithValue("@ScanDate", dataset.ScanDate.ToString("yyyy-MM-dd"));
                     command.Parameters.AddWithValue("@TotalAssets", dataset.TotalAssets);
                     command.Parameters.AddWithValue("@ActiveAssets", dataset.ActiveAssets);
-                    command.Parameters.AddWithValue("@TopServices", dataset.TopServices ?? "");
+                    command.Parameters.AddWithValue("@AllServices", dataset.AllServices ?? "");  // CHANGED
                     command.Parameters.AddWithValue("@ScansProcessed", dataset.ScansProcessed);
                     command.Parameters.AddWithValue("@RiskLevel", dataset.RiskLevel ?? "");
                     command.Parameters.AddWithValue("@LastModified", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -366,7 +427,7 @@ namespace Netra
                 string query = @"
                     SELECT * FROM Datasets 
                     WHERE CompanyName LIKE @SearchTerm 
-                       OR TopServices LIKE @SearchTerm 
+                       OR AllServices LIKE @SearchTerm 
                        OR RiskLevel LIKE @SearchTerm
                        OR FileNotes LIKE @SearchTerm
                     ORDER BY LastModified DESC";
@@ -385,7 +446,7 @@ namespace Netra
                                 ScanDate = GetSafeDateTime(reader, "ScanDate"),
                                 TotalAssets = GetSafeInt(reader, "TotalAssets"),
                                 ActiveAssets = GetSafeInt(reader, "ActiveAssets"),
-                                TopServices = GetSafeString(reader, "TopServices"),
+                                AllServices = GetSafeString(reader, "AllServices"),  // CHANGED
                                 ScansProcessed = GetSafeInt(reader, "ScansProcessed"),
                                 RiskLevel = GetSafeString(reader, "RiskLevel"),
                                 LastModified = GetSafeDateTime(reader, "LastModified"),

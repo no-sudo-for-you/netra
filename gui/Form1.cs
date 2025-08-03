@@ -18,6 +18,9 @@ namespace Netra
         private List<string> selectedFiles = new List<string>();
         private List<SimpleAsset> parsedAssets = new List<SimpleAsset>();
         private DatasetManager datasetManager;
+        private Form debugWindow;
+        private TextBox debugTextBox;
+        private bool debugMode = false;
 
         public Form1()
         {
@@ -37,7 +40,7 @@ namespace Netra
             dataGridView1.Columns.Add("FileNotes", "Notes");
             dataGridView1.Columns.Add("TotalAssets", "Total Assets");
             dataGridView1.Columns.Add("ActiveAssets", "Active Assets");
-            dataGridView1.Columns.Add("TopServices", "Top Services");
+            dataGridView1.Columns.Add("AllServices", "All Services");
             dataGridView1.Columns.Add("ScansProcessed", "Scans Processed");
             dataGridView1.Columns.Add("RiskLevel", "Risk Level");
             dataGridView1.Columns.Add("LastModified", "Last Modified");
@@ -57,7 +60,7 @@ namespace Netra
             dataGridView1.Columns["FileNotes"].Width = 150;
             dataGridView1.Columns["TotalAssets"].Width = 80;
             dataGridView1.Columns["ActiveAssets"].Width = 80;
-            dataGridView1.Columns["TopServices"].Width = 150;
+            dataGridView1.Columns["AllServices"].Width = 150;
             dataGridView1.Columns["ScansProcessed"].Width = 90;
             dataGridView1.Columns["RiskLevel"].Width = 80;
             dataGridView1.Columns["LastModified"].Width = 120;
@@ -69,6 +72,7 @@ namespace Netra
             dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView1.MultiSelect = false;
 
+            // Wire up the event handler
             dataGridView1.CellContentClick += dataGridView1_CellContentClick;
 
             // Load actual data from database
@@ -90,7 +94,7 @@ namespace Netra
                         dataset.FileNotes,
                         dataset.TotalAssets.ToString(),
                         dataset.ActiveAssets.ToString(),
-                        dataset.TopServices,
+                        dataset.AllServices,
                         dataset.ScansProcessed.ToString(),
                         dataset.RiskLevel,
                         dataset.LastModified.ToString("yyyy-MM-dd HH:mm"),
@@ -104,85 +108,6 @@ namespace Netra
             catch (Exception ex)
             {
                 MessageBox.Show($"Error loading dataset library: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void ClearPlaceholderText()
-        {
-            // For company textbox - only clear if it's actually placeholder text
-            if (textBox5.ForeColor == Color.DimGray && textBox5.Text == "Enter company name, phone numbers, etc...")
-            {
-                textBox5.Text = "";
-                textBox5.ForeColor = Color.Black;
-            }
-
-            // For notes textbox - only clear if it's actually placeholder text  
-            if (textBox4.ForeColor == Color.DarkGray && textBox4.Text == "Enter scan types, notes, etc...")
-            {
-                textBox4.Text = "";
-                textBox4.ForeColor = Color.Black;
-            }
-        }
-
-        private void SaveUploadToDatabase()
-        {
-            try
-            {
-                // Fix: Read from the correct textbox controls
-                string companyName = textBox3.Text.Trim();  // Changed from textBox5 to textBox3
-                string fileNotes = textBox4.Text.Trim();    // This one might be correct
-                DateTime scanDate = dateTimePicker1.Value;
-
-                // Clean up placeholder text manually
-                if (companyName == "Enter company name, phone numbers, etc...")
-                {
-                    companyName = "";
-                }
-
-                if (fileNotes == "Enter scan types, Notes, Etc..." || fileNotes == "Enter scan types, notes, etc...")
-                {
-                    fileNotes = "";
-                }
-
-                if (string.IsNullOrEmpty(companyName))
-                {
-                    MessageBox.Show("Please enter a Company/Client Number!", "Missing Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                // Rest of your existing save code stays the same...
-                progressBar1.Visible = true;
-                label2.Visible = true;
-                label2.Text = "Saving to database...";
-                progressBar1.Value = 0;
-                button2.Enabled = false;
-
-                var dataset = new Dataset
-                {
-                    CompanyName = companyName,
-                    ScanDate = scanDate,
-                    TotalAssets = 0,
-                    ActiveAssets = 0,
-                    TopServices = "",
-                    ScansProcessed = selectedFiles.Count,
-                    RiskLevel = "Run Report to Generate",
-                    LastModified = DateTime.Now,
-                    FileNotes = fileNotes,
-                    OriginalFiles = string.Join(";", selectedFiles),
-                    CreatedDate = DateTime.Now
-                };
-
-                int datasetId = datasetManager.SaveDataset(dataset);
-                progressBar1.Value = 100;
-                label2.Text = "Save complete!";
-                MessageBox.Show($"Dataset saved successfully!\nDataset ID: {datasetId}", "Save Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadDatasetLibrary();
-                ResetUploadUI();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error saving to database: {ex.Message}", "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                ResetUploadUI();
             }
         }
 
@@ -209,7 +134,7 @@ namespace Netra
             }
         }
 
-        // NEW: Dataset Actions Methods
+        // Dataset Actions Methods
         private void ShowDatasetActions(int datasetId, string companyName, int rowIndex)
         {
             ContextMenuStrip actionMenu = new ContextMenuStrip();
@@ -244,8 +169,6 @@ namespace Netra
                 message += "This dataset is now selected for report generation.";
 
                 MessageBox.Show(message, "Dataset Selected", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                // TODO: Later we'll implement sending this to the Generate Report tab
             }
             catch (Exception ex)
             {
@@ -260,7 +183,6 @@ namespace Netra
                 var dataset = datasetManager.GetDataset(datasetId);
                 var assets = datasetManager.GetDatasetAssets(datasetId);
 
-                // For now, show a simple view - later we can create a full edit form
                 string message = $"Dataset Details:\n\n";
                 message += $"Company: {dataset.CompanyName}\n";
                 message += $"Scan Date: {dataset.ScanDate:yyyy-MM-dd}\n";
@@ -268,15 +190,13 @@ namespace Netra
                 message += $"Files Processed: {dataset.ScansProcessed}\n";
                 message += $"Total Assets: {dataset.TotalAssets}\n";
                 message += $"Active Assets: {dataset.ActiveAssets}\n";
-                message += $"Top Services: {dataset.TopServices}\n";
+                message += $"All Services: {dataset.AllServices}\n";
                 message += $"Risk Level: {dataset.RiskLevel}\n";
                 message += $"Assets Found: {assets.Count}\n";
                 message += $"Created: {dataset.CreatedDate:yyyy-MM-dd HH:mm}\n";
                 message += $"Last Modified: {dataset.LastModified:yyyy-MM-dd HH:mm}";
 
                 MessageBox.Show(message, "View Dataset", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                // TODO: Later we can create a proper edit form
             }
             catch (Exception ex)
             {
@@ -307,35 +227,18 @@ namespace Netra
             }
         }
 
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
+        // File Selection and Upload
         private void button1_Click(object sender, EventArgs e)
         {
-            // Create an OpenFileDialog to let user select files
             OpenFileDialog openFileDialog = new OpenFileDialog();
-
-            // Set the file filter to only show .zip and .txt files
             openFileDialog.Filter = "Scan Files|*.zip;*.txt|All Files|*.*";
             openFileDialog.Title = "Select Scan Files";
-
-            // Allow multiple file selection
             openFileDialog.Multiselect = true;
 
-            // Show the dialog and check if user clicked OK
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                // Store selected files for parser integration
                 selectedFiles = openFileDialog.FileNames.ToList();
 
-                // Validate file types
                 List<string> validFiles = new List<string>();
                 List<string> invalidFiles = new List<string>();
 
@@ -352,43 +255,36 @@ namespace Netra
                     }
                 }
 
-                // Keep only valid files for parser
                 selectedFiles = validFiles;
 
-                // Update the textbox based on results
                 if (validFiles.Count == 1)
                 {
-                    textBox1.Text = validFiles[0]; // Show single file path
+                    textBox1.Text = validFiles[0];
                 }
                 else if (validFiles.Count > 1)
                 {
-                    textBox1.Text = $"{validFiles.Count} files selected"; // Show count for multiple files
+                    textBox1.Text = $"{validFiles.Count} files selected";
                 }
 
-                // Update status label based on validation results
                 if (invalidFiles.Count > 0 && validFiles.Count == 0)
                 {
-                    // All files are invalid
-                    lblFileStatus.Text = "✗ Invalid file types detected";
+                    lblFileStatus.Text = "Invalid file types detected";
                     lblFileStatus.ForeColor = Color.Red;
                     textBox1.Text = "No valid files selected";
                 }
                 else if (invalidFiles.Count > 0 && validFiles.Count > 0)
                 {
-                    // Some valid, some invalid
-                    lblFileStatus.Text = $"⚠ {validFiles.Count} valid files, {invalidFiles.Count} ignored";
+                    lblFileStatus.Text = $"{validFiles.Count} valid files, {invalidFiles.Count} ignored";
                     lblFileStatus.ForeColor = Color.Orange;
                 }
                 else if (validFiles.Count > 0)
                 {
-                    // All files are valid
-                    lblFileStatus.Text = $"✓ {validFiles.Count} files ready to upload";
+                    lblFileStatus.Text = $"{validFiles.Count} files ready to upload";
                     lblFileStatus.ForeColor = Color.Green;
                 }
             }
             else
             {
-                // User cancelled the dialog
                 lblFileStatus.Text = "No files selected";
                 lblFileStatus.ForeColor = Color.Red;
             }
@@ -396,17 +292,15 @@ namespace Netra
 
         private void button2_Click(object sender, EventArgs e)
         {
-            // Check if user has selected files
             if (selectedFiles.Count == 0)
             {
                 MessageBox.Show("Please select files first!", "No Files Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // Check what actions are selected
-            bool parseAndReport = checkBox1.Checked; // Parse and Send to Report
-            bool sendToScrubber = checkBox2.Checked; // Send to Scrubber  
-            bool parseAndSaveToDatabase = checkBox3.Checked; // Parse and Save Data to Database
+            bool parseAndReport = checkBox1.Checked;
+            bool sendToScrubber = checkBox2.Checked;
+            bool parseAndSaveToDatabase = checkBox3.Checked;
 
             if (!parseAndReport && !sendToScrubber && !parseAndSaveToDatabase)
             {
@@ -416,88 +310,93 @@ namespace Netra
 
             if (parseAndReport || parseAndSaveToDatabase)
             {
-                // Run the REAL Python parser for either option
                 RunRealParserAndShowAssets();
             }
             else if (sendToScrubber)
             {
-                // Handle scrubber functionality
                 MessageBox.Show("Send to Scrubber functionality will be implemented!", "Coming Soon", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            else
-            {
-                // Keep your existing upload simulation for other actions
-                progressBar1.Visible = true;
-                label2.Visible = true;
-                progressBar1.Value = 0;
-                progressBar1.Maximum = 100;
-                button2.Enabled = false;
-                SimulateUpload();
             }
         }
 
+        // Main Parser Execution
         private async void RunRealParserAndShowAssets()
         {
             try
             {
+                if (debugMode) AddDebugMessage("=== STARTING PARSER ===");
+
                 progressBar1.Visible = true;
                 label2.Visible = true;
-                label2.Text = "Running nmap parser...";
+                label2.Text = "Initializing parser...";
                 progressBar1.Value = 0;
+                progressBar1.Maximum = 100;
                 button2.Enabled = false;
 
-                // Phase 1: Setup
-                for (int i = 0; i <= 20; i++)
+                if (debugMode) AddDebugMessage($"Selected files: {selectedFiles.Count}");
+                foreach (var file in selectedFiles)
                 {
-                    progressBar1.Value = i;
-                    await Task.Delay(50);
-                    Application.DoEvents();
+                    if (debugMode) AddDebugMessage($"File: {Path.GetFileName(file)} ({new FileInfo(file).Length:N0} bytes)");
                 }
 
-                // Phase 2: Run Python parser
+                await Task.Delay(50);
+                progressBar1.Value = 5;
+                Application.DoEvents();
+                if (debugMode) AddDebugMessage("Initialization complete");
+
                 label2.Text = "Parsing scan files...";
+                progressBar1.Value = 10;
+                Application.DoEvents();
+                if (debugMode) AddDebugMessage("Starting Python parser...");
+
                 string jsonOutput = await RunPythonParser(selectedFiles);
 
-                for (int i = 21; i <= 60; i++)
-                {
-                    progressBar1.Value = i;
-                    await Task.Delay(30);
-                    Application.DoEvents();
-                }
+                if (debugMode) AddDebugMessage($"Python parser returned, JSON length: {jsonOutput?.Length ?? 0}");
 
                 if (string.IsNullOrEmpty(jsonOutput))
                 {
-                    MessageBox.Show("Failed to parse scan files. Please check that Python is installed and the parser script is in the correct location.", "Parse Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (debugMode) AddDebugMessage("ERROR: JSON output is null or empty");
+                    MessageBox.Show("Failed to parse scan files. Check debug window for details.", "Parse Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     ResetUploadUI();
                     return;
                 }
 
-                // Phase 3: Parse JSON results
-                label2.Text = "Processing results...";
-                parsedAssets = ParseJsonResults(jsonOutput);
-
-                for (int i = 61; i <= 100; i++)
+                if (debugMode)
                 {
-                    progressBar1.Value = i;
-                    await Task.Delay(20);
-                    Application.DoEvents();
+                    string preview = jsonOutput.Length > 200 ? jsonOutput.Substring(0, 200) + "..." : jsonOutput;
+                    AddDebugMessage($"JSON preview: {preview}");
                 }
 
+                label2.Text = "Processing results...";
+                progressBar1.Value = 90;
+                Application.DoEvents();
+                if (debugMode) AddDebugMessage("Starting JSON parsing...");
+
+                parsedAssets = ParseJsonResults(jsonOutput);
+                if (debugMode) AddDebugMessage($"JSON parsing complete, found {parsedAssets.Count} assets");
+
+                progressBar1.Value = 100;
+                label2.Text = "Complete!";
+                await Task.Delay(200);
+
                 ResetUploadUI();
+                if (debugMode) AddDebugMessage("UI reset complete");
 
                 if (parsedAssets.Count == 0)
                 {
-                    MessageBox.Show("No assets found in scan files. Please check that the files contain valid nmap output.", "No Assets Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    if (debugMode) AddDebugMessage("WARNING: No assets found");
+                    MessageBox.Show("No assets found in scan files. Check debug window for details.", "No Assets Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                // Show asset selection form
+                if (debugMode) AddDebugMessage("Opening asset selection form...");
                 ShowSimpleAssetSelection();
-
+                if (debugMode) AddDebugMessage("=== PARSER COMPLETE ===");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error during parsing: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (debugMode) AddDebugMessage($"CRITICAL ERROR: {ex.Message}");
+                if (debugMode) AddDebugMessage($"Stack trace: {ex.StackTrace}");
+                MessageBox.Show($"Error during parsing: {ex.Message}\n\nCheck debug window for details.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 ResetUploadUI();
             }
         }
@@ -513,67 +412,714 @@ namespace Netra
         {
             try
             {
-                // Create a temporary JSON file for output
-                string tempOutputFile = Path.GetTempFileName() + ".json";
+                if (debugMode) AddDebugMessage("=== STREAMLINED PARSER METHOD ===");
+
+                string pythonExe = FindPythonExecutable();
                 string pythonScript = Path.Combine(Application.StartupPath, "parser", "nmap_parser.py");
 
-                // Check if Python script exists
+                if (debugMode) AddDebugMessage($"Python executable: {pythonExe}");
+                if (debugMode) AddDebugMessage($"Parser script: {pythonScript}");
+
                 if (!File.Exists(pythonScript))
                 {
-                    MessageBox.Show($"Python parser not found at: {pythonScript}\n\nPlease create a 'parser' folder in your application directory and copy nmap_parser.py into it.", "Parser Not Found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (debugMode) AddDebugMessage("ERROR: Parser script not found!");
                     return null;
                 }
 
-                // Build command line arguments
-                string arguments = $"parse --export \"{tempOutputFile}\"";
-                foreach (string file in filePaths)
-                {
-                    arguments += $" \"{file}\"";
-                }
+                // ONLY use stdout method - skip the problematic export method entirely
+                string arguments = $"\"{pythonScript}\" parse \"{filePaths[0]}\"";
+                if (debugMode) AddDebugMessage($"Command: {pythonExe} {arguments}");
 
-                // Run Python script
-                ProcessStartInfo startInfo = new ProcessStartInfo
-                {
-                    FileName = "python",
-                    Arguments = $"\"{pythonScript}\" {arguments}",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                };
-
-                using (Process process = Process.Start(startInfo))
-                {
-                    await Task.Run(() => process.WaitForExit());
-
-                    if (process.ExitCode != 0)
-                    {
-                        string error = process.StandardError.ReadToEnd();
-                        string output = process.StandardOutput.ReadToEnd();
-                        MessageBox.Show($"Python parser failed:\n\nError: {error}\n\nOutput: {output}\n\nMake sure Python is installed and accessible from command line.", "Parser Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return null;
-                    }
-                }
-
-                // Read the JSON output
-                if (File.Exists(tempOutputFile))
-                {
-                    string jsonContent = File.ReadAllText(tempOutputFile);
-                    File.Delete(tempOutputFile); // Clean up
-                    return jsonContent;
-                }
-                else
-                {
-                    MessageBox.Show("Parser did not generate output file.", "Parser Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return null;
-                }
+                return await RunSimplePythonCommand(pythonExe, arguments, 60000); // 60 second timeout
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error running Python parser: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (debugMode) AddDebugMessage($"EXCEPTION in RunPythonParser: {ex.Message}");
                 return null;
             }
         }
+
+        private async Task<string> RunSimplePythonCommand(string pythonExe, string arguments, int timeoutMs)
+        {
+            try
+            {
+                if (debugMode) AddDebugMessage($"Starting simple process: {pythonExe} {arguments}");
+
+                Process process = new Process();
+                process.StartInfo.FileName = pythonExe;
+                process.StartInfo.Arguments = arguments;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.WorkingDirectory = Path.GetDirectoryName(Path.Combine(Application.StartupPath, "parser", "nmap_parser.py"));
+
+                StringBuilder allOutput = new StringBuilder();
+                StringBuilder errorOutput = new StringBuilder();
+
+                // Use simple synchronous reading for reliability
+                process.Start();
+                if (debugMode) AddDebugMessage($"Process started, PID: {process.Id}");
+
+                // Start background tasks to read output
+                var outputTask = Task.Run(() =>
+                {
+                    try
+                    {
+                        using (var reader = process.StandardOutput)
+                        {
+                            string line;
+                            while ((line = reader.ReadLine()) != null)
+                            {
+                                allOutput.AppendLine(line);
+                                if (debugMode) AddDebugMessage($"PYTHON OUT: {line}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (debugMode) AddDebugMessage($"Output reading error: {ex.Message}");
+                    }
+                });
+
+                var errorTask = Task.Run(() =>
+                {
+                    try
+                    {
+                        using (var reader = process.StandardError)
+                        {
+                            string line;
+                            while ((line = reader.ReadLine()) != null)
+                            {
+                                errorOutput.AppendLine(line);
+                                if (debugMode) AddDebugMessage($"PYTHON ERR: {line}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (debugMode) AddDebugMessage($"Error reading error: {ex.Message}");
+                    }
+                });
+
+                // Wait for process completion or timeout
+                var processTask = Task.Run(() => process.WaitForExit());
+                var completedTask = await Task.WhenAny(processTask, Task.Delay(timeoutMs));
+
+                if (completedTask == processTask)
+                {
+                    // Process completed normally
+                    if (debugMode) AddDebugMessage("Process completed normally");
+
+                    // Wait for output tasks to complete
+                    await Task.WhenAll(outputTask, errorTask);
+
+                    if (debugMode) AddDebugMessage($"Process exit code: {process.ExitCode}");
+                }
+                else
+                {
+                    // Process timed out
+                    if (debugMode) AddDebugMessage($"Process timed out after {timeoutMs}ms");
+                    try { process.Kill(); } catch { }
+
+                    // Give output tasks a chance to finish
+                    await Task.Delay(2000);
+                }
+
+                process.Close();
+
+                string stdout = allOutput.ToString().Trim();
+                string stderr = errorOutput.ToString().Trim();
+
+                if (debugMode) AddDebugMessage($"Final stdout length: {stdout.Length}");
+                if (debugMode) AddDebugMessage($"Final stderr length: {stderr.Length}");
+
+                // Check if we got asset data
+                if (IsValidAssetOutput(stdout))
+                {
+                    if (debugMode) AddDebugMessage("Found valid asset output - extracting data");
+                    return ExtractAssetsFromOutput(stdout);
+                }
+
+                // Return raw output if we got something
+                if (!string.IsNullOrEmpty(stdout))
+                {
+                    if (debugMode) AddDebugMessage("Returning raw stdout");
+                    return stdout;
+                }
+
+                if (!string.IsNullOrEmpty(stderr))
+                {
+                    if (debugMode) AddDebugMessage("Returning stderr");
+                    return stderr;
+                }
+
+                if (debugMode) AddDebugMessage("No output received");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                if (debugMode) AddDebugMessage($"Exception in RunSimplePythonCommand: {ex.Message}");
+                return null;
+            }
+        }
+
+        // SIMPLIFIED validation method
+        private bool IsValidAssetOutput(string output)
+        {
+            if (string.IsNullOrEmpty(output)) return false;
+
+            // Look for any signs of asset data
+            return output.Contains("] 172.16.") || // Asset entries
+                   output.Contains("ALL ASSETS FOUND") || // Summary section
+                   output.Contains("COMPLETE BREAKDOWN") || // Completion message
+                   output.Contains("Processing complete!"); // Progress completion
+        }
+
+        private bool IsCompleteAssetOutput(string output)
+        {
+            // Multiple ways to detect complete output
+            if (string.IsNullOrEmpty(output)) return false;
+
+            // Method 1: Look for completion message
+            if (output.Contains("COMPLETE BREAKDOWN FINISHED"))
+            {
+                if (debugMode) AddDebugMessage("Found 'COMPLETE BREAKDOWN FINISHED' marker");
+                return true;
+            }
+
+            // Method 2: Look for the note about service uncertainty (always last message)
+            if (output.Contains("couldn't confirm it with 100% certainty"))
+            {
+                if (debugMode) AddDebugMessage("Found final note about service uncertainty");
+                return true;
+            }
+
+            // Method 3: Check for "Processing complete!" AND asset data
+            if (output.Contains("Progress: 100% - Processing complete!") &&
+                output.Contains("ALL ASSETS FOUND") &&
+                output.Contains("] 172.16."))
+            {
+                if (debugMode) AddDebugMessage("Found processing complete with asset data");
+                return true;
+            }
+
+            return false;
+        }
+
+        private string ExtractAssetsFromOutput(string output)
+        {
+            try
+            {
+                if (debugMode) AddDebugMessage("Starting simplified asset extraction...");
+
+                var assets = new List<object>();
+                var lines = output.Split('\n');
+
+                object currentAsset = null;
+                var services = new List<string>();
+
+                foreach (var line in lines)
+                {
+                    var trimmed = line.Trim();
+
+                    // Look for asset headers: [ 1] 172.16.1.1
+                    var match = System.Text.RegularExpressions.Regex.Match(trimmed, @"\[\s*\d+\]\s+(\d+\.\d+\.\d+\.\d+)");
+                    if (match.Success)
+                    {
+                        // Save previous asset
+                        if (currentAsset != null)
+                        {
+                            var prev = (dynamic)currentAsset;
+                            assets.Add(new
+                            {
+                                ip_address = prev.ip_address,
+                                hostname = prev.hostname,
+                                vendor = prev.vendor,
+                                open_port_count = prev.open_port_count,
+                                open_services = string.Join(", ", services)
+                            });
+                        }
+
+                        // Start new asset
+                        currentAsset = new
+                        {
+                            ip_address = match.Groups[1].Value,
+                            hostname = "",
+                            vendor = "Unknown",
+                            open_port_count = 0
+                        };
+                        services.Clear();
+                        continue;
+                    }
+
+                    // Parse asset details
+                    if (currentAsset != null)
+                    {
+                        if (trimmed.StartsWith("Vendor:"))
+                        {
+                            var vendor = trimmed.Replace("Vendor:", "").Trim();
+                            var asset = (dynamic)currentAsset;
+                            currentAsset = new
+                            {
+                                ip_address = asset.ip_address,
+                                hostname = asset.hostname,
+                                vendor = vendor,
+                                open_port_count = asset.open_port_count
+                            };
+                        }
+                        else if (trimmed.StartsWith("Open Ports:"))
+                        {
+                            var portsStr = trimmed.Replace("Open Ports:", "").Trim();
+                            if (int.TryParse(portsStr, out int ports))
+                            {
+                                var asset = (dynamic)currentAsset;
+                                currentAsset = new
+                                {
+                                    ip_address = asset.ip_address,
+                                    hostname = asset.hostname,
+                                    vendor = asset.vendor,
+                                    open_port_count = ports
+                                };
+                            }
+                        }
+                        else if (trimmed.Contains("- ") && trimmed.Contains(":"))
+                        {
+                            services.Add(trimmed.Replace("-", "").Trim());
+                        }
+                    }
+                }
+
+                // Don't forget the last asset
+                if (currentAsset != null)
+                {
+                    var last = (dynamic)currentAsset;
+                    assets.Add(new
+                    {
+                        ip_address = last.ip_address,
+                        hostname = last.hostname,
+                        vendor = last.vendor,
+                        open_port_count = last.open_port_count,
+                        open_services = string.Join(", ", services)
+                    });
+                }
+
+                if (debugMode) AddDebugMessage($"Extracted {assets.Count} assets");
+
+                // Build simple JSON
+                var json = new StringBuilder();
+                json.AppendLine("{");
+                json.AppendLine("  \"summary\": {");
+                json.AppendLine($"    \"total_devices\": {assets.Count},");
+                json.AppendLine($"    \"active_devices\": {assets.Count},");
+                json.AppendLine($"    \"total_open_ports\": {assets.Sum(a => ((dynamic)a).open_port_count)}");
+                json.AppendLine("  },");
+                json.AppendLine("  \"assets\": [");
+
+                for (int i = 0; i < assets.Count; i++)
+                {
+                    var asset = (dynamic)assets[i];
+                    json.AppendLine("    {");
+                    json.AppendLine($"      \"ip_address\": \"{asset.ip_address}\",");
+                    json.AppendLine($"      \"hostname\": \"{asset.hostname}\",");
+                    json.AppendLine($"      \"vendor\": \"{asset.vendor}\",");
+                    json.AppendLine($"      \"open_port_count\": {asset.open_port_count},");
+                    json.AppendLine($"      \"open_services\": \"{asset.open_services}\"");
+                    json.AppendLine(i < assets.Count - 1 ? "    }," : "    }");
+                }
+
+                json.AppendLine("  ]");
+                json.AppendLine("}");
+
+                return json.ToString();
+            }
+            catch (Exception ex)
+            {
+                if (debugMode) AddDebugMessage($"Extraction error: {ex.Message}");
+                return "{\"summary\":{\"total_devices\":0,\"active_devices\":0,\"total_open_ports\":0},\"assets\":[]}";
+            }
+        }
+        private void TestPythonOutputDirectly()
+        {
+            if (!debugMode)
+            {
+                MessageBox.Show("Please enable debug mode first.", "Debug Required");
+                return;
+            }
+
+            try
+            {
+                if (selectedFiles.Count == 0)
+                {
+                    AddDebugMessage("No files selected for testing");
+                    return;
+                }
+
+                string pythonExe = FindPythonExecutable();
+                string pythonScript = Path.Combine(Application.StartupPath, "parser", "nmap_parser.py");
+                string testFile = selectedFiles[0];
+
+                AddDebugMessage("=== TESTING PYTHON OUTPUT DIRECTLY ===");
+                AddDebugMessage($"Command: {pythonExe} \"{pythonScript}\" parse \"{testFile}\"");
+
+                Process process = new Process();
+                process.StartInfo.FileName = pythonExe;
+                process.StartInfo.Arguments = $"\"{pythonScript}\" parse \"{testFile}\"";
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.CreateNoWindow = true;
+
+                process.Start();
+
+                // Read all output at once
+                string output = process.StandardOutput.ReadToEnd();
+                string error = process.StandardError.ReadToEnd();
+
+                process.WaitForExit(60000); // 60 second timeout
+
+                AddDebugMessage($"Exit code: {process.ExitCode}");
+                AddDebugMessage($"Output length: {output.Length}");
+                AddDebugMessage($"Error length: {error.Length}");
+
+                if (!string.IsNullOrEmpty(output))
+                {
+                    // Show first and last 500 chars to see structure
+                    if (output.Length > 1000)
+                    {
+                        AddDebugMessage("FIRST 500 CHARS:");
+                        AddDebugMessage(output.Substring(0, 500));
+                        AddDebugMessage("LAST 500 CHARS:");
+                        AddDebugMessage(output.Substring(output.Length - 500));
+                    }
+                    else
+                    {
+                        AddDebugMessage("FULL OUTPUT:");
+                        AddDebugMessage(output);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(error))
+                {
+                    AddDebugMessage("ERROR OUTPUT:");
+                    AddDebugMessage(error);
+                }
+
+                process.Close();
+                AddDebugMessage("=== DIRECT TEST COMPLETE ===");
+            }
+            catch (Exception ex)
+            {
+                AddDebugMessage($"Direct test failed: {ex.Message}");
+            }
+        }
+        private void TestDirectPythonExecution()
+        {
+            if (!debugMode)
+            {
+                MessageBox.Show("Please enable debug mode first by checking 'Parse and Save Data to Database'", "Debug Required");
+                return;
+            }
+
+            AddDebugMessage("=== TESTING DIRECT PYTHON EXECUTION ===");
+
+            try
+            {
+                string pythonExe = FindPythonExecutable();
+                string pythonScript = Path.Combine(Application.StartupPath, "parser", "nmap_parser.py");
+
+                if (selectedFiles.Count == 0)
+                {
+                    AddDebugMessage("No files selected for testing");
+                    return;
+                }
+
+                string testFile = selectedFiles[0];
+                AddDebugMessage($"Testing with file: {Path.GetFileName(testFile)}");
+
+                // Test 1: Basic script execution
+                AddDebugMessage("Test 1: Basic script help");
+                string helpArgs = $"\"{pythonScript}\" --help";
+
+                Process helpProcess = new Process();
+                helpProcess.StartInfo.FileName = pythonExe;
+                helpProcess.StartInfo.Arguments = helpArgs;
+                helpProcess.StartInfo.UseShellExecute = false;
+                helpProcess.StartInfo.RedirectStandardOutput = true;
+                helpProcess.StartInfo.RedirectStandardError = true;
+                helpProcess.StartInfo.CreateNoWindow = true;
+
+                helpProcess.Start();
+                bool helpFinished = helpProcess.WaitForExit(5000);
+
+                if (helpFinished)
+                {
+                    string helpOutput = helpProcess.StandardOutput.ReadToEnd();
+                    AddDebugMessage($"Help command succeeded: {helpOutput.Length} chars");
+                }
+                else
+                {
+                    AddDebugMessage("Help command timed out");
+                    try { helpProcess.Kill(); } catch { }
+                }
+                helpProcess.Close();
+
+                // Test 2: File export with manual monitoring
+                AddDebugMessage("Test 2: Export with manual monitoring");
+                string tempFile = Path.Combine(Path.GetTempPath(), $"test_export_{DateTime.Now.Ticks}.json");
+                string exportArgs = $"\"{pythonScript}\" parse --export \"{tempFile}\" \"{testFile}\"";
+
+                Process exportProcess = new Process();
+                exportProcess.StartInfo.FileName = pythonExe;
+                exportProcess.StartInfo.Arguments = exportArgs;
+                exportProcess.StartInfo.UseShellExecute = false;
+                exportProcess.StartInfo.RedirectStandardOutput = true;
+                exportProcess.StartInfo.RedirectStandardError = true;
+                exportProcess.StartInfo.CreateNoWindow = true;
+
+                var startTime = DateTime.Now;
+                exportProcess.Start();
+
+                // Monitor the process manually using Thread.Sleep
+                for (int i = 0; i < 300; i++) // 30 seconds max, check every 100ms
+                {
+                    System.Threading.Thread.Sleep(100);
+
+                    if (exportProcess.HasExited)
+                    {
+                        AddDebugMessage($"Process exited naturally after {(DateTime.Now - startTime).TotalMilliseconds}ms");
+                        break;
+                    }
+
+                    // Check if file exists (script might be done even if process hasn't exited)
+                    if (File.Exists(tempFile))
+                    {
+                        var fileInfo = new FileInfo(tempFile);
+                        if (fileInfo.Length > 0)
+                        {
+                            AddDebugMessage($"Output file created after {(DateTime.Now - startTime).TotalMilliseconds}ms, size: {fileInfo.Length} bytes");
+
+                            // Give it a bit more time to finish writing
+                            System.Threading.Thread.Sleep(2000);
+
+                            if (!exportProcess.HasExited)
+                            {
+                                AddDebugMessage("File created but process still running - forcing exit");
+                                try { exportProcess.Kill(); } catch { }
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                if (!exportProcess.HasExited)
+                {
+                    AddDebugMessage("Process did not exit after 30 seconds, killing it");
+                    try { exportProcess.Kill(); } catch { }
+                }
+
+                // Check results
+                if (File.Exists(tempFile))
+                {
+                    string content = File.ReadAllText(tempFile);
+                    AddDebugMessage($"SUCCESS: Got {content.Length} characters from file");
+
+                    try { File.Delete(tempFile); } catch { }
+
+                    if (content.Contains("assets"))
+                    {
+                        AddDebugMessage("File contains asset data - this method works!");
+                    }
+                }
+                else
+                {
+                    AddDebugMessage("No output file created");
+                }
+
+                exportProcess.Close();
+                AddDebugMessage("=== DIRECT EXECUTION TEST COMPLETE ===");
+            }
+            catch (Exception ex)
+            {
+                AddDebugMessage($"Test failed: {ex.Message}");
+            }
+        }
+        private void TestSimplePythonCall()
+        {
+            AddDebugMessage("=== TESTING SIMPLE PYTHON CALL ===");
+
+            try
+            {
+                string pythonExe = FindPythonExecutable();
+                AddDebugMessage($"Testing basic Python: {pythonExe} --version");
+
+                Process process = new Process();
+                process.StartInfo.FileName = pythonExe;
+                process.StartInfo.Arguments = "--version";
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.CreateNoWindow = true;
+
+                process.Start();
+                process.WaitForExit(5000);
+
+                string output = process.StandardOutput.ReadToEnd();
+                string error = process.StandardError.ReadToEnd();
+
+                AddDebugMessage($"Python version output: {output}");
+                if (!string.IsNullOrEmpty(error)) AddDebugMessage($"Python version error: {error}");
+
+                // Test if the parser script exists and has basic syntax
+                string pythonScript = Path.Combine(Application.StartupPath, "parser", "nmap_parser.py");
+                AddDebugMessage($"Testing script syntax: {pythonExe} -m py_compile \"{pythonScript}\"");
+
+                process = new Process();
+                process.StartInfo.FileName = pythonExe;
+                process.StartInfo.Arguments = $"-m py_compile \"{pythonScript}\"";
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.CreateNoWindow = true;
+
+                process.Start();
+                process.WaitForExit(5000);
+
+                output = process.StandardOutput.ReadToEnd();
+                error = process.StandardError.ReadToEnd();
+
+                if (process.ExitCode == 0)
+                {
+                    AddDebugMessage("SUCCESS: Python script syntax is valid");
+                }
+                else
+                {
+                    AddDebugMessage($"ERROR: Python script has syntax errors:");
+                    AddDebugMessage($"Output: {output}");
+                    AddDebugMessage($"Error: {error}");
+                }
+
+                process.Close();
+            }
+            catch (Exception ex)
+            {
+                AddDebugMessage($"Error in simple Python test: {ex.Message}");
+            }
+        }
+
+        private string FindPythonExecutable()
+        {
+            string bundledPython = Path.Combine(Application.StartupPath, "python", "python.exe");
+            if (File.Exists(bundledPython))
+                return bundledPython;
+
+            // Try python3 first (to match Kali)
+            try
+            {
+                var process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = "python3",
+                    Arguments = "--version",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                });
+
+                if (process != null)
+                {
+                    process.WaitForExit();
+                    if (process.ExitCode == 0)
+                        return "python3";
+                }
+            }
+            catch { }
+
+            // Try regular python
+            try
+            {
+                var process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = "python",
+                    Arguments = "--version",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                });
+
+                if (process != null)
+                {
+                    process.WaitForExit();
+                    if (process.ExitCode == 0)
+                        return "python";
+                }
+            }
+            catch { }
+
+            throw new Exception("Python not found. Please install Python or contact support.");
+        }
+
+        private string ConvertTextOutputToJson(string textOutput)
+        {
+            try
+            {
+                if (debugMode) AddDebugMessage("Converting text output to JSON...");
+
+                // Simple conversion without JSON library dependencies
+                var ipMatches = System.Text.RegularExpressions.Regex.Matches(textOutput, @"\b(\d+\.\d+\.\d+\.\d+)\b");
+
+                StringBuilder jsonBuilder = new StringBuilder();
+                jsonBuilder.AppendLine("{");
+                jsonBuilder.AppendLine("  \"summary\": {");
+                jsonBuilder.AppendLine($"    \"total_devices\": {ipMatches.Count},");
+                jsonBuilder.AppendLine($"    \"active_devices\": {ipMatches.Count},");
+                jsonBuilder.AppendLine("    \"total_open_ports\": 0");
+                jsonBuilder.AppendLine("  },");
+                jsonBuilder.AppendLine("  \"assets\": [");
+
+                for (int i = 0; i < ipMatches.Count; i++)
+                {
+                    string ip = ipMatches[i].Groups[1].Value;
+                    jsonBuilder.AppendLine("    {");
+                    jsonBuilder.AppendLine($"      \"ip_address\": \"{ip}\",");
+                    jsonBuilder.AppendLine("      \"hostname\": \"\",");
+                    jsonBuilder.AppendLine("      \"vendor\": \"Unknown\",");
+                    jsonBuilder.AppendLine("      \"open_port_count\": 0,");
+                    jsonBuilder.AppendLine("      \"open_services\": \"\"");
+
+                    if (i < ipMatches.Count - 1)
+                    {
+                        jsonBuilder.AppendLine("    },");
+                    }
+                    else
+                    {
+                        jsonBuilder.AppendLine("    }");
+                    }
+                }
+
+                jsonBuilder.AppendLine("  ]");
+                jsonBuilder.AppendLine("}");
+
+                if (debugMode) AddDebugMessage($"Extracted {ipMatches.Count} assets from text");
+
+                return jsonBuilder.ToString();
+            }
+            catch (Exception ex)
+            {
+                if (debugMode) AddDebugMessage($"Error converting text to JSON: {ex.Message}");
+
+                // Return minimal valid JSON if conversion fails
+                return @"{
+  ""summary"": {
+    ""total_devices"": 0,
+    ""active_devices"": 0,
+    ""total_open_ports"": 0
+  },
+  ""assets"": [],
+  ""error"": ""Failed to process output""
+}";
+            }
+        }
+
 
         private List<SimpleAsset> ParseJsonResults(string jsonContent)
         {
@@ -581,18 +1127,12 @@ namespace Netra
 
             try
             {
-                // Simple JSON parsing without external libraries
-                // We'll extract the basic asset information
-
-                // Look for the assets array in the JSON
                 int assetsIndex = jsonContent.IndexOf("\"assets\":");
                 if (assetsIndex == -1) return assets;
 
-                // Find the start of the array
                 int arrayStart = jsonContent.IndexOf("[", assetsIndex);
                 if (arrayStart == -1) return assets;
 
-                // Find the matching closing bracket
                 int bracketCount = 0;
                 int arrayEnd = arrayStart;
                 for (int i = arrayStart; i < jsonContent.Length; i++)
@@ -608,14 +1148,12 @@ namespace Netra
 
                 string assetsJson = jsonContent.Substring(arrayStart + 1, arrayEnd - arrayStart - 1);
 
-                // Split by asset objects (look for ip_address pattern)
                 var assetMatches = System.Text.RegularExpressions.Regex.Matches(assetsJson, @"""ip_address"":\s*""([^""]+)""");
                 var hostnameMatches = System.Text.RegularExpressions.Regex.Matches(assetsJson, @"""hostname"":\s*""([^""]*)""");
                 var vendorMatches = System.Text.RegularExpressions.Regex.Matches(assetsJson, @"""vendor"":\s*""([^""]*)""");
                 var portCountMatches = System.Text.RegularExpressions.Regex.Matches(assetsJson, @"""open_port_count"":\s*(\d+)");
                 var servicesMatches = System.Text.RegularExpressions.Regex.Matches(assetsJson, @"""open_services"":\s*""([^""]*)""");
 
-                // Create assets from the matches
                 for (int i = 0; i < assetMatches.Count; i++)
                 {
                     var asset = new SimpleAsset
@@ -641,7 +1179,6 @@ namespace Netra
 
         private void ShowSimpleAssetSelection()
         {
-            // Create a simple form to show the parsed assets
             Form assetForm = new Form
             {
                 Text = "Select Assets for Report",
@@ -649,7 +1186,6 @@ namespace Netra
                 StartPosition = FormStartPosition.CenterParent
             };
 
-            // Create a ListView to show assets
             ListView listView = new ListView
             {
                 View = View.Details,
@@ -657,17 +1193,15 @@ namespace Netra
                 FullRowSelect = true,
                 GridLines = true,
                 Location = new Point(10, 10),
-                Size = new Size(860, 450)  // Made taller to give more space for assets
+                Size = new Size(860, 450)
             };
 
-            // Add columns
             listView.Columns.Add("IP Address", 120);
             listView.Columns.Add("Hostname", 150);
             listView.Columns.Add("Vendor", 120);
             listView.Columns.Add("Open Ports", 80);
             listView.Columns.Add("Services", 370);
 
-            // Add assets to the list
             foreach (var asset in parsedAssets)
             {
                 ListViewItem item = new ListViewItem(asset.IpAddress);
@@ -680,44 +1214,40 @@ namespace Netra
                 listView.Items.Add(item);
             }
 
-            // Add three buttons with better spacing to fit the window
             Button btnSave = new Button
             {
                 Text = "Save to Database",
-                Location = new Point(480, 520),  // Moved up and adjusted spacing
+                Location = new Point(480, 520),
                 Size = new Size(120, 35)
             };
 
             Button btnGenerateReport = new Button
             {
                 Text = "Generate Report",
-                Location = new Point(610, 520),  // Adjusted spacing
+                Location = new Point(610, 520),
                 Size = new Size(120, 35)
             };
 
             Button btnCancel = new Button
             {
                 Text = "Cancel",
-                Location = new Point(740, 520),  // Fits within window
+                Location = new Point(740, 520),
                 Size = new Size(80, 35)
             };
 
-            // Add summary label
             Label lblSummary = new Label
             {
                 Text = $"Found {parsedAssets.Count} assets from scan files. Select assets to include.",
-                Location = new Point(10, 480),  // Moved up to make room for buttons
+                Location = new Point(10, 480),
                 Size = new Size(500, 40)
             };
 
-            // Add controls to form
             assetForm.Controls.Add(listView);
             assetForm.Controls.Add(btnSave);
             assetForm.Controls.Add(btnGenerateReport);
             assetForm.Controls.Add(btnCancel);
             assetForm.Controls.Add(lblSummary);
 
-            // Event handlers
             btnSave.Click += (s, e) =>
             {
                 var selectedAssets = new List<SimpleAsset>();
@@ -735,12 +1265,8 @@ namespace Netra
                     return;
                 }
 
-                // Save to database
                 SaveParsedAssetsToDatabase(selectedAssets);
-
-                // Show success message and close form
                 MessageBox.Show($"Saved {selectedAssets.Count} assets to database successfully!", "Save Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
                 assetForm.DialogResult = DialogResult.OK;
                 assetForm.Close();
             };
@@ -756,16 +1282,8 @@ namespace Netra
                     }
                 }
 
-                if (selectedAssets.Count == 0)
-                {
-                    MessageBox.Show("Please select at least one asset for the report.", "No Assets Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
                 assetForm.DialogResult = DialogResult.OK;
                 assetForm.Close();
-
-                // Show confirmation for report generation
                 MessageBox.Show($"Selected {selectedAssets.Count} assets for report generation.\n\nReport generation functionality will be implemented next!", "Assets Selected", MessageBoxButtons.OK, MessageBoxIcon.Information);
             };
 
@@ -775,16 +1293,13 @@ namespace Netra
                 assetForm.Close();
             };
 
-            // Show the form
             assetForm.ShowDialog();
         }
 
-        // Add this new method to save parsed assets to database
         private void SaveParsedAssetsToDatabase(List<SimpleAsset> selectedAssets)
         {
             try
             {
-                // Get data from upload form
                 string companyName = textBox3.Text.Trim();
                 DateTime scanDate = dateTimePicker1.Value;
                 string fileNotes = textBox4.Text.Trim();
@@ -794,39 +1309,39 @@ namespace Netra
                     companyName = "Parsed Scan " + DateTime.Now.ToString("yyyy-MM-dd HH:mm");
                 }
 
-                // Clean placeholder text
                 if (fileNotes == "Enter scan types, Notes, Etc..." || fileNotes == "Enter scan types, notes, etc...")
                 {
                     fileNotes = "";
                 }
 
-                // Calculate top services
                 var serviceCounts = new Dictionary<string, int>();
-                foreach (var asset in selectedAssets)
+                var allServices = selectedAssets
+                    .Where(asset => !string.IsNullOrEmpty(asset.OpenServices))
+                    .SelectMany(asset => asset.OpenServices.Split(',', ';', '|'))
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .ToList();
+
+                foreach (var service in allServices)
                 {
-                    if (!string.IsNullOrEmpty(asset.OpenServices))
-                    {
-                        var services = asset.OpenServices.Split(',', ';', '|').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s));
-                        foreach (var service in services)
-                        {
-                            if (serviceCounts.ContainsKey(service))
-                                serviceCounts[service] = serviceCounts[service] + 1;
-                            else
-                                serviceCounts[service] = 1;
-                        }
-                    }
+                    if (serviceCounts.ContainsKey(service))
+                        serviceCounts[service]++;
+                    else
+                        serviceCounts[service] = 1;
                 }
 
-                string topServices = string.Join(", ", serviceCounts.OrderByDescending(kvp => kvp.Value).Take(5).Select(kvp => kvp.Key));
+                string allServicesText = string.Join(", ", serviceCounts
+                    .OrderByDescending(kvp => kvp.Value)
+                    .Take(10)
+                    .Select(kvp => kvp.Key));
 
-                // Create dataset object
                 var dataset = new Dataset
                 {
                     CompanyName = companyName,
                     ScanDate = scanDate,
                     TotalAssets = selectedAssets.Count,
                     ActiveAssets = selectedAssets.Count(a => a.OpenPortCount > 0),
-                    TopServices = topServices,
+                    AllServices = allServicesText,
                     ScansProcessed = selectedFiles.Count,
                     RiskLevel = "Run Report to Generate",
                     LastModified = DateTime.Now,
@@ -835,12 +1350,8 @@ namespace Netra
                     CreatedDate = DateTime.Now
                 };
 
-                // Save to database with assets
                 int datasetId = datasetManager.SaveDataset(dataset, selectedAssets);
-
                 MessageBox.Show($"Dataset with {selectedAssets.Count} assets saved to library!\nDataset ID: {datasetId}", "Parse & Save Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                // Refresh the dataset library
                 LoadDatasetLibrary();
             }
             catch (Exception ex)
@@ -849,110 +1360,297 @@ namespace Netra
             }
         }
 
-        private async void SimulateUpload()
+        // DEBUG WINDOW FUNCTIONALITY
+        private void checkBox3_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox3.Checked)
+            {
+                debugMode = true;
+                OpenDebugWindow();
+                AddDebugMessage("Debug mode enabled - ready to track parsing");
+            }
+            else
+            {
+                debugMode = false;
+                if (debugWindow != null && !debugWindow.IsDisposed)
+                {
+                    debugWindow.Close();
+                    debugWindow = null;
+                }
+            }
+        }
+
+        private void OpenDebugWindow()
         {
             try
             {
-                // Phase 1: Uploading files
-                label2.Text = "Uploading files...";
-                for (int i = 0; i <= 40; i++)
+                if (debugWindow != null && !debugWindow.IsDisposed)
                 {
-                    progressBar1.Value = i;
-                    await Task.Delay(50); // Simulate time
-                    Application.DoEvents(); // Keep UI responsive
+                    debugWindow.Close();
                 }
 
-                // Phase 2: Processing files
-                label2.Text = "Processing scan data...";
-                for (int i = 41; i <= 80; i++)
+                debugWindow = new Form
                 {
-                    progressBar1.Value = i;
-                    await Task.Delay(30);
-                    Application.DoEvents();
-                }
+                    Text = "Parser Debug Output - RedBlue Labs",
+                    Size = new Size(900, 700),
+                    StartPosition = FormStartPosition.CenterScreen,
+                    FormBorderStyle = FormBorderStyle.Sizable,
+                    MinimumSize = new Size(600, 400)
+                };
 
-                // Phase 3: Saving to database
-                label2.Text = "Saving to database...";
-                for (int i = 81; i <= 100; i++)
+                Panel buttonPanel = new Panel
                 {
-                    progressBar1.Value = i;
-                    await Task.Delay(40);
-                    Application.DoEvents();
-                }
+                    Dock = DockStyle.Top,
+                    Height = 40,
+                    BackColor = Color.LightGray
+                };
 
-                // Complete!
-                label2.Text = "Upload complete!";
-                MessageBox.Show("Files uploaded and processed successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Button clearBtn = new Button
+                {
+                    Text = "Clear Log",
+                    Location = new Point(10, 8),
+                    Size = new Size(80, 25)
+                };
 
-                // Reset UI
-                progressBar1.Visible = false;
-                label2.Visible = false;
-                button2.Enabled = true;
-                textBox1.Text = "";
-                lblFileStatus.Text = "No files selected";
-                lblFileStatus.ForeColor = Color.Red;
+                Button saveBtn = new Button
+                {
+                    Text = "Save Log",
+                    Location = new Point(100, 8),
+                    Size = new Size(80, 25)
+                };
+
+                Button testBtn = new Button
+                {
+                    Text = "Test Parser",
+                    Location = new Point(190, 8),
+                    Size = new Size(100, 25)
+                };
+
+                clearBtn.Click += (s, e) => {
+                    if (debugTextBox != null) debugTextBox.Clear();
+                    AddDebugMessage("=== LOG CLEARED ===");
+                };
+
+                saveBtn.Click += (s, e) => SaveDebugLog();
+                testBtn.Click += (s, e) => TestParserSetup();
+
+                buttonPanel.Controls.AddRange(new Control[] { clearBtn, saveBtn, testBtn });
+
+                debugTextBox = new TextBox
+                {
+                    Multiline = true,
+                    ScrollBars = ScrollBars.Both,
+                    ReadOnly = true,
+                    Dock = DockStyle.Fill,
+                    Font = new Font("Consolas", 9),
+                    BackColor = Color.Black,
+                    ForeColor = Color.LimeGreen,
+                    WordWrap = false
+                };
+
+                debugWindow.Controls.Add(debugTextBox);
+                debugWindow.Controls.Add(buttonPanel);
+
+                debugWindow.FormClosing += (s, e) => {
+                    debugMode = false;
+                    checkBox3.Checked = false;
+                };
+
+                debugWindow.Show();
+
+                AddDebugMessage("=== REDBLUE LABS PARSER DEBUG WINDOW ===");
+                AddDebugMessage($"Debug session started at: {DateTime.Now}");
+                AddDebugMessage($"Application path: {Application.StartupPath}");
+                AddDebugMessage($"Current directory: {Environment.CurrentDirectory}");
+                AddDebugMessage("=== READY FOR PARSING ===");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error during upload: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                button2.Enabled = true;
+                MessageBox.Show($"Error opening debug window: {ex.Message}", "Debug Error");
             }
         }
 
-        private void pictureBox1_Click(object sender, EventArgs e)
+        private void AddDebugMessage(string message)
         {
-
+            try
+            {
+                if (debugTextBox != null && !debugTextBox.IsDisposed && debugTextBox.InvokeRequired)
+                {
+                    debugTextBox.Invoke((Action)(() => AppendDebugText(message)));
+                }
+                else if (debugTextBox != null && !debugTextBox.IsDisposed)
+                {
+                    AppendDebugText(message);
+                }
+            }
+            catch (Exception)
+            {
+                // Silently handle debug errors
+            }
         }
 
-        private void label2_Click(object sender, EventArgs e)
+        private void AppendDebugText(string message)
         {
+            try
+            {
+                string timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+                string logLine = $"[{timestamp}] {message}\r\n";
 
+                debugTextBox.AppendText(logLine);
+                debugTextBox.SelectionStart = debugTextBox.Text.Length;
+                debugTextBox.ScrollToCaret();
+
+                if (debugTextBox.Lines.Length > 1000)
+                {
+                    var lines = debugTextBox.Lines;
+                    var keepLines = lines.Skip(lines.Length - 800).ToArray();
+                    debugTextBox.Lines = keepLines;
+                }
+            }
+            catch (Exception)
+            {
+                // Silently handle debug errors
+            }
         }
 
-        private void panel1_Paint(object sender, PaintEventArgs e)
+        private void SaveDebugLog()
         {
+            try
+            {
+                SaveFileDialog saveDialog = new SaveFileDialog
+                {
+                    Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*",
+                    FileName = $"parser_debug_log_{DateTime.Now:yyyyMMdd_HHmmss}.txt"
+                };
 
+                if (saveDialog.ShowDialog() == DialogResult.OK)
+                {
+                    File.WriteAllText(saveDialog.FileName, debugTextBox.Text);
+                    AddDebugMessage($"Debug log saved to: {saveDialog.FileName}");
+                }
+            }
+            catch (Exception ex)
+            {
+                AddDebugMessage($"Error saving log: {ex.Message}");
+            }
         }
 
-        private void panel1_Paint_1(object sender, PaintEventArgs e)
+        private void TestParserSetup()
         {
+            AddDebugMessage("=== TESTING PARSER SETUP ===");
 
+            try
+            {
+                AddDebugMessage("Testing Python installation...");
+                string pythonExe = FindPythonExecutable();
+                AddDebugMessage($"SUCCESS: Python found at: {pythonExe}");
+
+                string parserScript = Path.Combine(Application.StartupPath, "parser", "nmap_parser.py");
+                AddDebugMessage($"Checking parser script: {parserScript}");
+                AddDebugMessage($"Parser script exists: {File.Exists(parserScript)}");
+
+                if (!File.Exists(parserScript))
+                {
+                    AddDebugMessage("ERROR: Parser script not found!");
+                    AddDebugMessage($"Expected location: {parserScript}");
+                    AddDebugMessage("Make sure the 'parser' folder with 'nmap_parser.py' is in your application directory");
+                    return;
+                }
+
+                string scriptContent = File.ReadAllText(parserScript);
+                AddDebugMessage($"SUCCESS: Parser script size: {scriptContent.Length:N0} characters");
+
+                if (scriptContent.Contains("def main():") && scriptContent.Contains("parse"))
+                {
+                    AddDebugMessage("SUCCESS: Parser script appears to be valid");
+                }
+                else
+                {
+                    AddDebugMessage("WARNING: Parser script may be incomplete");
+                }
+
+                AddDebugMessage("Testing Python version...");
+                ProcessStartInfo versionInfo = new ProcessStartInfo
+                {
+                    FileName = pythonExe,
+                    Arguments = "--version",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                using (Process process = Process.Start(versionInfo))
+                {
+                    process.WaitForExit(5000);
+                    string version = process.StandardOutput.ReadToEnd();
+                    AddDebugMessage($"SUCCESS: Python version: {version.Trim()}");
+                }
+
+                AddDebugMessage("Testing parser script execution...");
+                ProcessStartInfo helpInfo = new ProcessStartInfo
+                {
+                    FileName = pythonExe,
+                    Arguments = $"\"{parserScript}\" --help",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    WorkingDirectory = Path.GetDirectoryName(parserScript)
+                };
+
+                using (Process process = Process.Start(helpInfo))
+                {
+                    process.WaitForExit(10000);
+                    string output = process.StandardOutput.ReadToEnd();
+                    string error = process.StandardError.ReadToEnd();
+
+                    AddDebugMessage($"Parser exit code: {process.ExitCode}");
+                    AddDebugMessage($"Parser output length: {output.Length}");
+                    AddDebugMessage($"Parser error length: {error.Length}");
+
+                    if (process.ExitCode == 0 && output.Contains("parse"))
+                    {
+                        AddDebugMessage("SUCCESS: Parser script executes successfully");
+                    }
+                    else
+                    {
+                        AddDebugMessage($"PROBLEM: Parser script failed with exit code: {process.ExitCode}");
+                        if (!string.IsNullOrEmpty(output))
+                            AddDebugMessage($"Output: {output}");
+                        if (!string.IsNullOrEmpty(error))
+                            AddDebugMessage($"Error: {error}");
+                    }
+                }
+
+                AddDebugMessage("=== PARSER SETUP TEST COMPLETE ===");
+            }
+            catch (Exception ex)
+            {
+                AddDebugMessage($"TEST FAILED: {ex.Message}");
+                AddDebugMessage($"Stack trace: {ex.StackTrace}");
+            }
         }
 
-        private void tabPage1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label4_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void pictureBox2_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void panel1_Paint_2(object sender, PaintEventArgs e)
-        {
-
-        }
+        // ALL THE EVENT HANDLERS
+        private void label1_Click(object sender, EventArgs e) { }
+        private void checkBox1_CheckedChanged(object sender, EventArgs e) { }
+        private void pictureBox1_Click(object sender, EventArgs e) { }
+        private void label2_Click(object sender, EventArgs e) { }
+        private void panel1_Paint(object sender, PaintEventArgs e) { }
+        private void panel1_Paint_1(object sender, PaintEventArgs e) { }
+        private void tabPage1_Click(object sender, EventArgs e) { }
+        private void label3_Click(object sender, EventArgs e) { }
+        private void label4_Click(object sender, EventArgs e) { }
+        private void pictureBox2_Click(object sender, EventArgs e) { }
+        private void panel1_Paint_2(object sender, PaintEventArgs e) { }
+        private void label4_Click_1(object sender, EventArgs e) { }
 
         private void textBox1_DragEnter(object sender, DragEventArgs e)
         {
-            // Check if the dragged data contains files
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                // Get the file paths
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-
-                // Check if at least one file has a valid extension
                 bool hasValidFile = false;
                 foreach (string file in files)
                 {
@@ -964,31 +1662,26 @@ namespace Netra
                     }
                 }
 
-                // Allow drop if we have valid files
                 if (hasValidFile)
                 {
-                    e.Effect = DragDropEffects.Copy; // Show "copy" cursor
+                    e.Effect = DragDropEffects.Copy;
                 }
                 else
                 {
-                    e.Effect = DragDropEffects.None; // Show "no drop" cursor
+                    e.Effect = DragDropEffects.None;
                 }
             }
             else
             {
-                e.Effect = DragDropEffects.None; // Not files, don't allow
+                e.Effect = DragDropEffects.None;
             }
         }
 
         private void textBox1_DragDrop(object sender, DragEventArgs e)
         {
-            // Get the dropped files
             string[] droppedFiles = (string[])e.Data.GetData(DataFormats.FileDrop);
-
-            // Store selected files for parser integration
             selectedFiles = droppedFiles.ToList();
 
-            // Validate file types (same logic as Browse button)
             List<string> validFiles = new List<string>();
             List<string> invalidFiles = new List<string>();
 
@@ -1005,167 +1698,63 @@ namespace Netra
                 }
             }
 
-            // Keep only valid files for parser
             selectedFiles = validFiles;
 
-            // Update the textbox based on results
             if (validFiles.Count == 1)
             {
-                textBox1.Text = validFiles[0]; // Show single file path
+                textBox1.Text = validFiles[0];
             }
             else if (validFiles.Count > 1)
             {
-                textBox1.Text = $"{validFiles.Count} files selected"; // Show count for multiple files
+                textBox1.Text = $"{validFiles.Count} files selected";
             }
 
-            // Update status label based on validation results
             if (invalidFiles.Count > 0 && validFiles.Count == 0)
             {
-                // All files are invalid
-                lblFileStatus.Text = "✗ Invalid file types detected";
+                lblFileStatus.Text = "Invalid file types detected";
                 lblFileStatus.ForeColor = Color.Red;
                 textBox1.Text = "No valid files selected";
             }
             else if (invalidFiles.Count > 0 && validFiles.Count > 0)
             {
-                // Some valid, some invalid
-                lblFileStatus.Text = $"⚠ {validFiles.Count} valid files, {invalidFiles.Count} ignored";
+                lblFileStatus.Text = $"{validFiles.Count} valid files, {invalidFiles.Count} ignored";
                 lblFileStatus.ForeColor = Color.Orange;
             }
             else if (validFiles.Count > 0)
             {
-                // All files are valid
-                lblFileStatus.Text = $"✓ {validFiles.Count} files ready to upload";
+                lblFileStatus.Text = $"{validFiles.Count} files ready to upload";
                 lblFileStatus.ForeColor = Color.Green;
             }
         }
 
         private void tabPage1_DragDrop(object sender, DragEventArgs e)
         {
-            // Get the dropped files
-            string[] droppedFiles = (string[])e.Data.GetData(DataFormats.FileDrop);
-
-            // Store selected files for parser integration
-            selectedFiles = droppedFiles.ToList();
-
-            // Validate file types (same logic as Browse button)
-            List<string> validFiles = new List<string>();
-            List<string> invalidFiles = new List<string>();
-
-            foreach (string file in droppedFiles)
-            {
-                string extension = Path.GetExtension(file).ToLower();
-                if (extension == ".zip" || extension == ".txt")
-                {
-                    validFiles.Add(file);
-                }
-                else
-                {
-                    invalidFiles.Add(file);
-                }
-            }
-
-            // Keep only valid files for parser
-            selectedFiles = validFiles;
-
-            // Update the textbox based on results
-            if (validFiles.Count == 1)
-            {
-                textBox1.Text = validFiles[0]; // Show single file path
-            }
-            else if (validFiles.Count > 1)
-            {
-                textBox1.Text = $"{validFiles.Count} files selected"; // Show count for multiple files
-            }
-
-            // Update status label based on validation results
-            if (invalidFiles.Count > 0 && validFiles.Count == 0)
-            {
-                // All files are invalid
-                lblFileStatus.Text = "✗ Invalid file types detected";
-                lblFileStatus.ForeColor = Color.Red;
-                textBox1.Text = "No valid files selected";
-            }
-            else if (invalidFiles.Count > 0 && validFiles.Count > 0)
-            {
-                // Some valid, some invalid
-                lblFileStatus.Text = $"⚠ {validFiles.Count} valid files, {invalidFiles.Count} ignored";
-                lblFileStatus.ForeColor = Color.Orange;
-            }
-            else if (validFiles.Count > 0)
-            {
-                // All files are valid
-                lblFileStatus.Text = $"✓ {validFiles.Count} files ready to upload";
-                lblFileStatus.ForeColor = Color.Green;
-            }
+            textBox1_DragDrop(sender, e);
         }
 
         private void tabPage1_DragEnter(object sender, DragEventArgs e)
         {
-            // Check if the dragged data contains files
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                // Get the file paths
-                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-
-                // Check if at least one file has a valid extension
-                bool hasValidFile = false;
-                foreach (string file in files)
-                {
-                    string extension = Path.GetExtension(file).ToLower();
-                    if (extension == ".zip" || extension == ".txt")
-                    {
-                        hasValidFile = true;
-                        break;
-                    }
-                }
-
-                // Allow drop if we have valid files
-                if (hasValidFile)
-                {
-                    e.Effect = DragDropEffects.Copy; // Show "copy" cursor
-                }
-                else
-                {
-                    e.Effect = DragDropEffects.None; // Show "no drop" cursor
-                }
-            }
-            else
-            {
-                e.Effect = DragDropEffects.None; // Not files, don't allow
-            }
+            textBox1_DragEnter(sender, e);
         }
 
-        private void label4_Click_1(object sender, EventArgs e)
-        {
-
-        }
-
-        // UPDATED: Working DataGridView cell click handler
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            // Check if the clicked cell is in the Actions column
             if (e.ColumnIndex == dataGridView1.Columns["Actions"].Index && e.RowIndex >= 0)
             {
-                // Get the dataset ID from the row tag
                 if (dataGridView1.Rows[e.RowIndex].Tag == null) return;
 
                 int datasetId = (int)dataGridView1.Rows[e.RowIndex].Tag;
                 string companyName = dataGridView1.Rows[e.RowIndex].Cells["CompanyName"].Value.ToString();
 
-                // Show context menu with the three options
                 ShowDatasetActions(datasetId, companyName, e.RowIndex);
             }
         }
 
-        private void textBox3_TextChanged(object sender, EventArgs e)
-        {
-
-        }
+        private void textBox3_TextChanged(object sender, EventArgs e) { }
 
         private void textBox4_Enter(object sender, EventArgs e)
         {
-            if (textBox4.ForeColor == Color.DarkGray) // If it's still placeholder color
+            if (textBox4.ForeColor == Color.DarkGray)
             {
                 textBox4.Text = "";
                 textBox4.ForeColor = Color.Black;
@@ -1181,40 +1770,17 @@ namespace Netra
             }
         }
 
-        private void groupBox1_Enter(object sender, EventArgs e)
-        {
-
-        }
-
-        private void checkBox4_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void checkBox5_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void checkBox6_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void checkBox7_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label7_Enter(object sender, EventArgs e)
-        {
-
-        }
+        private void groupBox1_Enter(object sender, EventArgs e) { }
+        private void checkBox4_CheckedChanged(object sender, EventArgs e) { }
+        private void checkBox5_CheckedChanged(object sender, EventArgs e) { }
+        private void checkBox6_CheckedChanged(object sender, EventArgs e) { }
+        private void checkBox7_CheckedChanged(object sender, EventArgs e) { }
+        private void label7_Enter(object sender, EventArgs e) { }
 
         private void textBox5_Enter(object sender, EventArgs e)
         {
             TextBox tb = sender as TextBox;
-            if (tb.ForeColor == Color.DimGray) // If it's still placeholder color
+            if (tb.ForeColor == Color.DimGray)
             {
                 tb.Text = "";
                 tb.ForeColor = Color.Black;
@@ -1231,54 +1797,21 @@ namespace Netra
             }
         }
 
-        private void textBox5_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox4_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void radioButton1_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void radioButton3_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void radioButton2_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label8_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void groupBox3_Enter(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label8_Click_1(object sender, EventArgs e)
-        {
-
-        }
+        private void textBox5_TextChanged(object sender, EventArgs e) { }
+        private void textBox4_TextChanged(object sender, EventArgs e) { }
+        private void radioButton1_CheckedChanged(object sender, EventArgs e) { }
+        private void radioButton3_CheckedChanged(object sender, EventArgs e) { }
+        private void radioButton2_CheckedChanged(object sender, EventArgs e) { }
+        private void label8_Click(object sender, EventArgs e) { }
+        private void groupBox3_Enter(object sender, EventArgs e) { }
+        private void label8_Click_1(object sender, EventArgs e) { }
 
         private void radioFileSource_CheckedChanged(object sender, EventArgs e)
         {
             if (radioFileSource.Checked)
             {
                 btnSelectSource2.Text = "Browse Files...";
-                btnSelectSource2.Visible = true; // Show browse button
-
-                // Reset selection status
+                btnSelectSource2.Visible = true;
                 label9.Text = "No Source Selected.";
                 label9.ForeColor = Color.Red;
             }
@@ -1289,9 +1822,7 @@ namespace Netra
             if (radioLibrarySource.Checked)
             {
                 btnSelectSource2.Text = "Select from Library";
-                btnSelectSource2.Visible = true; // Show browse button
-
-                // Reset selection status
+                btnSelectSource2.Visible = true;
                 label9.Text = "No Source Selected.";
                 label9.ForeColor = Color.Red;
             }
@@ -1301,14 +1832,12 @@ namespace Netra
         {
             if (radioFileSource.Checked)
             {
-                // File selection logic
                 OpenFileDialog openFileDialog = new OpenFileDialog();
                 openFileDialog.Filter = "Scan Files|*.zip;*.txt;*.nmap|All Files|*.*";
                 openFileDialog.Title = "Select Scan File to Scrub";
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    // File selected successfully
                     string fileName = Path.GetFileName(openFileDialog.FileName);
                     label9.Text = $"Selected: {fileName}";
                     label9.ForeColor = Color.Green;
@@ -1316,10 +1845,7 @@ namespace Netra
             }
             else if (radioLibrarySource.Checked)
             {
-                // Library selection logic (placeholder for now)
                 MessageBox.Show("Dataset library selection will be implemented when the Dataset Library tab is complete!", "Coming Soon");
-
-                // For demo purposes, simulate selecting from library
                 label9.Text = "Selected: CLIENT-A Scan (June 5, 2025)";
                 label9.ForeColor = Color.Green;
             }
@@ -1331,40 +1857,22 @@ namespace Netra
 
         private void SaveToLocal_CheckedChanged(object sender, EventArgs e)
         {
-            // Show/hide the browse button based on checkbox state
             buttonSaveLocal.Visible = SaveToLocal.Checked;
         }
 
-        private void checkBox10_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void checkBox11_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label11_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label12_Click(object sender, EventArgs e)
-        {
-
-        }
+        private void checkBox10_CheckedChanged(object sender, EventArgs e) { }
+        private void checkBox11_CheckedChanged(object sender, EventArgs e) { }
+        private void label11_Click(object sender, EventArgs e) { }
+        private void label12_Click(object sender, EventArgs e) { }
 
         private void ScrubbingBtn_Click(object sender, EventArgs e)
         {
-            // Check if user has selected a source
             if (label9.Text == "No Source Selected.")
             {
                 MessageBox.Show("Please select a data source first!", "No Source Selected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // Check if at least one output destination is selected
             bool hasOutput = checkBoxSaveToLibrary.Checked || SaveToLocal.Checked || checkBoxSendToReport.Checked;
 
             if (!hasOutput)
@@ -1373,14 +1881,9 @@ namespace Netra
                 return;
             }
 
-            // Show progress elements
             progressBarScrubbing.Visible = true;
             labelProcessing.Visible = true;
-
-            // Disable the button during processing
             ScrubbingBtn.Enabled = false;
-
-            // Start the scrubbing simulation
             SimulateScrubbing();
         }
 
@@ -1388,11 +1891,9 @@ namespace Netra
         {
             try
             {
-                // Reset progress
                 progressBarScrubbing.Value = 0;
                 progressBarScrubbing.Maximum = 100;
 
-                // Phase 1: Reading source data
                 labelProcessing.Text = "Reading source data...";
                 for (int i = 0; i <= 30; i++)
                 {
@@ -1401,7 +1902,6 @@ namespace Netra
                     Application.DoEvents();
                 }
 
-                // Phase 2: Applying scrubbing rules
                 labelProcessing.Text = "Applying scrubbing rules...";
                 for (int i = 31; i <= 70; i++)
                 {
@@ -1410,7 +1910,6 @@ namespace Netra
                     Application.DoEvents();
                 }
 
-                // Phase 3: Saving outputs
                 labelProcessing.Text = "Saving scrubbed data...";
                 for (int i = 71; i <= 100; i++)
                 {
@@ -1419,10 +1918,8 @@ namespace Netra
                     Application.DoEvents();
                 }
 
-                // Complete!
                 labelProcessing.Text = "Scrubbing complete!";
 
-                // Generate mapping key if requested
                 string message = "Data scrubbing completed successfully!";
                 if (checkBoxGenerateMapping.Checked)
                 {
@@ -1431,12 +1928,10 @@ namespace Netra
 
                 MessageBox.Show(message, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                // Reset UI
                 progressBarScrubbing.Visible = false;
                 labelProcessing.Visible = false;
                 ScrubbingBtn.Enabled = true;
 
-                // Reset source selection
                 label9.Text = "No Source Selected.";
                 label9.ForeColor = Color.Red;
                 radioFileSource.Checked = false;
@@ -1451,10 +1946,7 @@ namespace Netra
             }
         }
 
-        private void checkBoxGenerateMapping_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
+        private void checkBoxGenerateMapping_CheckedChanged(object sender, EventArgs e) { }
 
         private void buttonSaveLocal_Click(object sender, EventArgs e)
         {
@@ -1465,8 +1957,6 @@ namespace Netra
 
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                // Store the selected path (we'll use this when actually saving)
-                // For now, just show confirmation
                 MessageBox.Show($"Will save to: {saveFileDialog.FileName}", "Save Location Set");
             }
         }
@@ -1490,14 +1980,12 @@ namespace Netra
 
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
-                bool showRow = true; // Start with true, must match ALL terms
+                bool showRow = true;
 
-                // Check that ALL search terms are found
                 foreach (string searchTerm in searchTerms)
                 {
                     bool termFound = false;
 
-                    // Check each cell in the row for this specific term
                     for (int i = 0; i < row.Cells.Count; i++)
                     {
                         if (row.Cells[i].Value != null)
@@ -1514,7 +2002,6 @@ namespace Netra
                         }
                     }
 
-                    // If this term wasn't found, hide the row
                     if (!termFound)
                     {
                         showRow = false;
@@ -1526,10 +2013,7 @@ namespace Netra
             }
         }
 
-        private void dataGridView1_CellContentClick_1(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
+        private void dataGridView1_CellContentClick_1(object sender, DataGridViewCellEventArgs e) { }
 
         private void button_Test_Click_Click(object sender, EventArgs e)
         {
@@ -1538,7 +2022,8 @@ namespace Netra
     }
 }
 
-// Simple data classes for the parser integration
+
+// Simple data class for the parser integration
 public class SimpleAsset
 {
     public string IpAddress { get; set; }
